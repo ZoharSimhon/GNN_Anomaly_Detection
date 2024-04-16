@@ -19,7 +19,7 @@ from annoy import AnnoyIndex
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings):    
     # Initialize an Annoy index for nearest neighbor search
-    dimension = 2  # Number of features in the vectors
+    dimension = 32  # Number of features in the vectors
     index = AnnoyIndex(dimension, 'euclidean')
 
     # Add vectors to the index
@@ -49,10 +49,9 @@ def ann_algorithm(graph, embeddings):
         if anomaly:
             anomaly_node_id = list_nodes[i]
             anomaly_node = graph.nodes[anomaly_node_id]
-            amount = anomaly_node['amount']
-            length = anomaly_node['length']
-            time_delta = anomaly_node['time_delta']
-            print(f'found anomaly in {anomaly_node_id}: amount: {amount}, length: {length}, time_delta: {time_delta}')
+            anomaly_node_str = print_node(anomaly_node)
+            print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
+            
     return anomalies
 
 # Define a Graph Convolutional Network (GCN) model for generating embeddings
@@ -79,6 +78,7 @@ class Vector():
         self.dst = dst
         self.finished = False
         self.stream_number = stream_number
+        self.packet_index = 0
 
     # Aggregate the features on existing stream
     def add_packet(self, length, time_delta):
@@ -99,6 +99,30 @@ class Vector():
         return f'length: {self.length}, amount: {self.amount}, time_delta: {self.time_delta}, src: {self.src}, dst: {self.dst}'
     def __len__(self) -> int:
         return self.amount
+
+def print_node(node) -> str:
+    amount = node['amount']
+    length = node['length']
+    time_delta = node['time_delta']
+    side = node['side']
+
+    print_str= f'amount: {amount}, length: {length}, time_delta: {time_delta}'
+    if side == 'Client':
+        ip = node['ip']
+        print_str += f'\n on Client ip: {ip} \n'
+    
+    elif side == 'Server':
+        ip = node['ip']
+        print_str += f'\n on Server ip: {ip} \n'
+
+    else: # side = 'Flow
+        stream_number = node['stream_number']
+        sip = node['sip']
+        dip = node['dip']
+        
+        print_str += f'\n on Flow number: {stream_number} with Client ip: {sip} and Server ip: {dip} \n'
+    
+    return print_str
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
@@ -127,8 +151,8 @@ class TriGraph():
 
         # Initialize the neural network
         num_features = len(node_features[0])
-        hidden_size = 256
-        output_size = 128
+        hidden_size = 64
+        output_size = 32
         
         model = GCN(num_features, hidden_size, output_size)
         model.eval()
@@ -168,18 +192,22 @@ class TriGraph():
         src_id, dst_id = self.getId(vector.src), self.getId(vector.dst)
 
         if not self.graph.has_node(src_id):
-            self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, ip = vector.src, flows = 0, color = "lightskyblue")
+            self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
+                                ip = vector.src, flows = 0, color = "lightskyblue")
                 
         if not self.graph.has_node(dst_id):
-            self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, ip = vector.dst, sip = vector.src, flows = 0, color = "lightcoral")
+            self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
+                                ip = vector.dst, sip = vector.src, flows = 0, color = "lightcoral")
         
         self.update_features(src_id, vector)
         self.update_features(dst_id, vector)
         
         flow_node = f'{vector.stream_number}_{self.count_flows}f'
         if not self.graph.has_node(flow_node):
-            self.graph.add_node(flow_node, side = 'Flow', amount = vector.amount, 
-                        length = vector.length, time_delta = vector.time_delta, flows = 1, color = "violet")
+            self.graph.add_node(flow_node, side = 'Flow', amount = vector.amount,  
+                                length = vector.length, time_delta = vector.time_delta, 
+                                stream_number = vector.stream_number, packet_index = vector.packet_index,
+                                sip = vector.src, dip = vector.dst, flows = 1, color = "violet")
             
         # add edges
         if not self.graph.has_edge(src_id, flow_node):
@@ -214,6 +242,7 @@ class TriGraph():
         self.graph.nodes[id]["length"] += vector.length   
         self.graph.nodes[id]["time_delta"] +=  vector.time_delta
         self.graph.nodes[id]["flows"] += 1
+        self.graph.nodes[id]["packet_index"] = vector.packet_index
         
 # Plot the graph embeddings
 def plot_embeddings(embeddings, anomalies):
@@ -232,9 +261,6 @@ def plot_embeddings(embeddings, anomalies):
             plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
                          xytext=(5,5), ha='right')
             
-            
-
-
     plt.title("Graph Embeddings")
     plt.xlabel("Dimension 1")
     plt.ylabel("Dimension 2")
@@ -245,8 +271,9 @@ def plot_embeddings(embeddings, anomalies):
 # Run the algorithm on the given pcap file
 def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
     cap = FileCapture(pcap_file)
-    tri_graph = TriGraph()
-    prev_time = time(sliding_window_size)
+    tri_graph = TriGraph(sliding_window_size)
+    prev_time = time()
+    prev_count_flows = 0
 
     streams = {}
     
@@ -260,11 +287,12 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
             prev_time = time()
         
         # Compute the embeddings and the ANN every 10 flows
-        if tri_graph.count_flows % 10 == 0:
+        if tri_graph.count_flows - prev_count_flows >= 10:
             embeddings = tri_graph.graph_embedding()
             embeddings = embeddings.detach().numpy()
             anomalies = ann_algorithm(tri_graph.graph,embeddings)
             plot_embeddings(embeddings, anomalies)
+            prev_count_flows = tri_graph.count_flows
 
         # Check only TCP packets
         if hasattr(packet, 'ip') and hasattr(packet, 'tcp'):
@@ -290,25 +318,27 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
                 #  Divide large flow into small portions
                 if vector.time_delta > 0.1:
                     vector.finished = True
+                    vector.packet_index = i
                     tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta)
 
             vector = streams[stream_number]
             # End a flow in FYN or RST flag is opened
-            if packet.tcp.flags_fin == 'True' or packet.tcp.flags_reset == 'True':
+            if packet.tcp.flags_fin == '1' or packet.tcp.flags_reset == '1':
                 # if the stream is only fin, ignore it
                 if vector.amount == 1:
                     vector.reset()
                     continue
                 
                 # Add the whole flow - after he terminated to tri_graph
+                vector.packet_index = i
                 tri_graph.add_nodes_edges(vector)
                 streams.pop(stream_number)
 
 
 if __name__ == '__main__':
 
-    pcap_file_path = 'attack.pcap'
+    pcap_file_path = '04022024_1330_1634.pcap'
     run_algo(pcap_file_path, 1000, 50000)
 
