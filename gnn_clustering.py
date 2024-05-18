@@ -21,7 +21,7 @@ from sklearn.metrics import pairwise_distances_argmin_min
 def clustering_algorithm(graph, embeddings): 
     
     # Initialize HDBSCAN
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True)
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean')
     
     # Perform clustering
     cluster_labels = clusterer.fit_predict(embeddings)
@@ -310,7 +310,8 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
             embeddings = embeddings.detach().numpy()
             clusters = clustering_algorithm(tri_graph.graph,embeddings)
             check_all_anomalies(embeddings, clusters)
-            plot_embeddings(embeddings, clusters)
+            colors = [tri_graph.graph.nodes[node]["color"] for node in tri_graph.graph.nodes]
+            plot_embeddings(embeddings, colors)
             prev_count_flows = tri_graph.count_flows
 
         # Check only TCP packets

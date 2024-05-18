@@ -16,6 +16,11 @@ import torch.nn.functional as F
 import numpy as np
 from annoy import AnnoyIndex
 
+from datetime import datetime
+
+colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "lightblue", "lightcyan","paleturquoise", 
+          "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
+          "dodgerblue", "yellow"]
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings):    
     # Initialize an Annoy index for nearest neighbor search
@@ -50,7 +55,7 @@ def ann_algorithm(graph, embeddings):
             anomaly_node_id = list_nodes[i]
             anomaly_node = graph.nodes[anomaly_node_id]
             anomaly_node_str = print_node(anomaly_node)
-            print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
+            # print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
             
     return anomalies
 
@@ -127,10 +132,11 @@ def print_node(node) -> str:
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
     def __init__(self, sliding_window_size = 1000) -> None:
-        self.ipToID = {}
+        self.ip_to_id = {}
         self.graph = nx.Graph()
         self.count_flows = 1
         self.q = Queue(maxsize=sliding_window_size)
+        self.ip_to_color = {}
     
     def graph_embedding(self):
         # Convert node features to PyTorch tensors
@@ -162,24 +168,54 @@ class TriGraph():
         return embeddings
 
     # Generate id number for ip:port
-    def getId(self, key):
-        if key not in self.ipToID:
-            self.ipToID[key] = f'{len(self.ipToID)}ip'
-        return self.ipToID[key]
+    def get_id(self, key):
+        if key not in self.ip_to_id:
+            self.ip_to_id[key] = f'{len(self.ip_to_id)}ip'
+        return self.ip_to_id[key]
+
+    # Generate color number for ip
+    def get_color(self, ip):
+        if ip not in self.ip_to_color:
+            self.ip_to_color[ip] = colors[len(self.ip_to_color)%len(colors)]
+        return self.ip_to_color[ip]
 
     def visualize_directed_graph(self):
         plt.clf()
-     
-        pos = nx.multipartite_layout(self.graph, subset_key="side")
-
+        
+        # for node in self.graph.nodes:
+        #     print(self.graph.nodes[node])
+        #     print()
+        
+        # Get the nodes for each subset
+        left_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
+        middle_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
+        right_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Server"]
+        
+        # Initialize positions dictionary
+        pos = {}
+        
+        # Set positions for left nodes
+        for i, node in enumerate(left_nodes):
+            pos[node] = (-1, i * 2.0 / len(left_nodes))  # Adjust the multiplier for better spacing
+        
+        # Set positions for middle nodes
+        for i, node in enumerate(middle_nodes):
+            pos[node] = (0, i * 2.0 / len(middle_nodes))
+        
+        # Set positions for right nodes
+        for i, node in enumerate(right_nodes):
+            print(node, self.graph.nodes[node])
+            print()
+            pos[node] = (1, i * 2.0 / len(right_nodes))
+        
         # Draw nodes
         node_colors = [self.graph.nodes[node]["color"] for node in self.graph.nodes]
-        nx.draw_networkx_nodes(self.graph, pos, node_color=node_colors, node_size=700, node_shape='o')
+        nx.draw_networkx_nodes(self.graph, pos, node_color=node_colors, node_size=400, node_shape='o')
         
-        # Draw node features
+        # Draw node labels
         node_labels = {node: node for node in self.graph.nodes}
-        nx.draw_networkx_labels(self.graph, pos, labels=node_labels, font_color="white", font_size= 8)
-
+        nx.draw_networkx_labels(self.graph, pos, labels=node_labels, font_color="white", font_size=6, verticalalignment='center')
+        
         # Draw edges
         nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
         
@@ -187,17 +223,41 @@ class TriGraph():
         plt.show()
         plt.pause(0.1)
 
+    # def visualize_directed_graph(self):
+    #     plt.clf()
+     
+    #     pos = nx.multipartite_layout(self.graph, subset_key="side")
+
+    #     # Draw nodes
+    #     node_colors = [self.graph.nodes[node]["color"] for node in self.graph.nodes]
+    #     nx.draw_networkx_nodes(self.graph, pos, node_color=node_colors, node_size=700, node_shape='o')
+        
+    #     # Draw node features
+    #     node_labels = {node: node for node in self.graph.nodes}
+    #     nx.draw_networkx_labels(self.graph, pos, labels=node_labels, font_color="white", font_size= 8)
+
+    #     # Draw edges
+    #     nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
+        
+    #     plt.ion()
+    #     plt.show()
+    #     plt.pause(0.1)
+
     def add_nodes_edges(self, vector: Vector):
+        # define colors
+        src_ip, dst_ip = vector.src.split(":")[0], vector.dst.split(":")[0]
+        src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
+        
         #  add nodes
-        src_id, dst_id = self.getId(vector.src), self.getId(vector.dst)
+        src_id, dst_id = self.get_id(vector.src), self.get_id(vector.dst)
 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.src, flows = 0, color = "lightskyblue")
+                                ip = vector.src, flows = 0, color = src_color)
                 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.dst, sip = vector.src, flows = 0, color = "lightcoral")
+                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
         self.update_features(src_id, vector)
         self.update_features(dst_id, vector)
@@ -245,21 +305,28 @@ class TriGraph():
         self.graph.nodes[id]["packet_index"] = vector.packet_index
         
 # Plot the graph embeddings
-def plot_embeddings(embeddings, anomalies):
+def plot_embeddings(embeddings, anomalies, graph: nx.graph):
     # Convert embeddings to a NumPy array
     embeddings_array = embeddings.squeeze()
-
     # Plot embeddings acordding to their anomaly score
     plt.clf()
+    ids = list(graph.nodes)
     for i, embedding in enumerate(embeddings_array):
-        if anomalies[i]: # The embedding is anomaly
-            plt.scatter(embedding[0], embedding[1], c='lightcoral', alpha=0.5)
-            plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
-                         xytext=(5,5), ha='right')
-        else:
-            plt.scatter(embedding[0], embedding[1], c='lightskyblue', alpha=0.5)
-            plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
-                         xytext=(5,5), ha='right')
+        id = ids[i]
+        if graph.nodes[id]["side"] != "Client":
+            continue
+        plt.scatter(embedding[0], embedding[1], c=graph.nodes[id]["color"], alpha=0.5)
+        # plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
+        #                 xytext=(5,5), ha='right')
+        
+        # if anomalies[i]: # The embedding is anomaly
+        #     plt.scatter(embedding[0], embedding[1], c='lightcoral', alpha=0.5)
+        #     plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
+        #                  xytext=(5,5), ha='right')
+        # else:
+        #     plt.scatter(embedding[0], embedding[1], c='lightskyblue', alpha=0.5)
+        #     plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
+        #                  xytext=(5,5), ha='right')
             
     plt.title("Graph Embeddings")
     plt.xlabel("Dimension 1")
@@ -267,6 +334,10 @@ def plot_embeddings(embeddings, anomalies):
     plt.ion()
     plt.show()
     plt.pause(0.1)
+
+def find_packet_time(packet):
+    ts = int(float(packet.frame_info.time_epoch))
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
     
 # Run the algorithm on the given pcap file
 def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
@@ -280,7 +351,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
     for i, packet in enumerate(cap):
         if i == num_of_rows:
             return
-
+        
         # Plot the graph every 2 seconds 
         if 2 <= time() - prev_time:
             tri_graph.visualize_directed_graph()
@@ -291,7 +362,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
             embeddings = tri_graph.graph_embedding()
             embeddings = embeddings.detach().numpy()
             anomalies = ann_algorithm(tri_graph.graph,embeddings)
-            plot_embeddings(embeddings, anomalies)
+            plot_embeddings(embeddings, anomalies, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
 
         # Check only TCP packets
@@ -318,7 +389,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
                 #  Divide large flow into small portions
                 if vector.time_delta > 0.1:
                     vector.finished = True
-                    vector.packet_index = i
+                    vector.packet_index = find_packet_time(packet)
                     tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta)
@@ -332,7 +403,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
                     continue
                 
                 # Add the whole flow - after he terminated to tri_graph
-                vector.packet_index = i
+                vector.packet_index = find_packet_time(packet)
                 tri_graph.add_nodes_edges(vector)
                 streams.pop(stream_number)
 
