@@ -46,29 +46,37 @@ def plot_embeddings(embeddings, graph: nx.graph):
     perplexity = 5
     embeddings_array = TSNE(n_components=2, perplexity=perplexity).fit_transform(embeddings.detach().cpu().numpy())
     
-    # Plot embeddings acordding to their anomaly score
+    # Prepare the plot
     plt.clf()
     ids = list(graph.nodes)
+    
+    # Create a dictionary to map colors to labels
+    color_label_map = {}
+    for id in ids:
+        if graph.nodes[id]["side"] == "Client":
+            color = graph.nodes[id]["color"]
+            label = graph.nodes[id]["ip"].split(":")[0]
+            if color not in color_label_map:
+                color_label_map[color] = label
+    
+    # Plot embeddings according to their anomaly score
     for i, embedding in enumerate(embeddings_array):
         id = ids[i]
         if graph.nodes[id]["side"] != "Client":
             continue
-        plt.scatter(embedding[0], embedding[1], c=graph.nodes[id]["color"], alpha=0.5)
-        # plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
-        #                 xytext=(5,5), ha='right')
-        
-        # if anomalies[i]: # The embedding is anomaly
-        #     plt.scatter(embedding[0], embedding[1], c='lightcoral', alpha=0.5)
-        #     plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
-        #                  xytext=(5,5), ha='right')
-        # else:
-        #     plt.scatter(embedding[0], embedding[1], c='lightskyblue', alpha=0.5)
-        #     plt.annotate(f"", (embedding[0], embedding[1]), textcoords="offset points", 
-        #                  xytext=(5,5), ha='right')
-            
+        plt.scatter(embedding[0], embedding[1], c=graph.nodes[id]["color"], alpha=0.5, label=graph.nodes[id]["ip"].split(":")[0])
+
+    # Create the legend
+    handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in color_label_map]
+    labels = [label for label in color_label_map.values()]
+    # plt.legend(handles, labels, title="Legend", loc='best')
+    plt.legend(handles, labels, loc='best')
+    
+    # Finalize the plot
     plt.title("Graph Embeddings")
     plt.xlabel("Dimension 1")
     plt.ylabel("Dimension 2")
     plt.ion()
     plt.show()
     plt.pause(0.1)
+    

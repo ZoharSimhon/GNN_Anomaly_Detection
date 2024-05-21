@@ -2,9 +2,9 @@ from queue import Queue
 import networkx as nx
 from vector import Vector
 
-colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "lightblue","paleturquoise", 
+colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
-          "dodgerblue", "yellow"]
+          "peru","yellow"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():

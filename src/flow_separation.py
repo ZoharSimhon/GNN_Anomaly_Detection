@@ -12,7 +12,7 @@ def find_packet_time(packet):
     ts = int(float(packet.frame_info.time_epoch))
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-def run_algo(pcap_file, sliding_window_size, num_of_rows=500, algo='ann'):
+def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True):
     cap = FileCapture(pcap_file)
     tri_graph = TriGraph(sliding_window_size)
     prev_time = time()
@@ -25,7 +25,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500, algo='ann'):
             return
         
         # Plot the graph every 2 seconds 
-        if 2 <= time() - prev_time:
+        if 2 <= time() - prev_time and plot:
             tri_graph.visualize_directed_graph()
             prev_time = time()
         
@@ -38,7 +38,8 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500, algo='ann'):
                 cluster_embeddings = embeddings.detach().numpy()
                 clusters = clustering_algorithm(tri_graph.graph,cluster_embeddings)
                 check_all_anomalies(cluster_embeddings, clusters)
-            plot_embeddings(embeddings, tri_graph.graph)
+            if plot:
+                plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
 
         # Check only TCP packets

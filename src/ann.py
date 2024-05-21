@@ -54,7 +54,7 @@ def ann_algorithm(graph, embeddings):
     
     avg_distance = np.mean(anomaly_scores)
     std_distance = np.std(anomaly_scores)
-    threshold = 5
+    threshold = 10
     
     anomalies = [i for i in range(len(anomaly_scores)) 
                         if (anomaly_scores[i] > avg_distance + threshold * std_distance) ]
