@@ -47,8 +47,15 @@ def ann_algorithm(graph, embeddings):
     anomaly_scores = np.mean(distances, axis=1)
     
     # Thresholding
-    threshold = np.percentile(anomaly_scores,  95)  # Use the  95th percentile as a threshold
-    anomalies = anomaly_scores > threshold
+    # threshold = np.percentile(anomaly_scores, 99.99)  # Use the  95th percentile as a threshold
+    # anomalies = anomaly_scores > threshold
+    
+    avg_distance = np.mean(anomaly_scores)
+    std_distance = np.std(anomaly_scores)
+    threshold = 5
+    
+    anomalies = [i for i in range(len(anomaly_scores)) 
+                        if (anomaly_scores[i] > avg_distance + threshold * std_distance) ]
     
     # Print the anomalies nodes
     list_nodes = list(graph.nodes)
@@ -57,7 +64,7 @@ def ann_algorithm(graph, embeddings):
             anomaly_node_id = list_nodes[i]
             anomaly_node = graph.nodes[anomaly_node_id]
             anomaly_node_str = print_node(anomaly_node)
-            # print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
+            print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
             
     return anomalies
 
@@ -164,6 +171,7 @@ class TriGraph():
         output_size = 32
         
         model = GCN(num_features, hidden_size, output_size)
+        model.train()
         model.eval()
 
         embeddings = model(node_features, edge_index)
@@ -185,10 +193,6 @@ class TriGraph():
     def visualize_directed_graph(self):
         plt.clf()
         
-        # for node in self.graph.nodes:
-        #     print(self.graph.nodes[node])
-        #     print()
-        
         # Get the nodes for each subset
         left_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
         middle_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
@@ -207,8 +211,6 @@ class TriGraph():
         
         # Set positions for right nodes
         for i, node in enumerate(right_nodes):
-            print(node, self.graph.nodes[node])
-            print()
             pos[node] = (1, i * 2.0 / len(right_nodes))
         
         # Draw nodes
@@ -415,6 +417,6 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
 
 if __name__ == '__main__':
 
-    pcap_file_path = '04022024_1330_1634.pcap'
+    pcap_file_path = 'Thursday-WorkingHours.pcap'
     run_algo(pcap_file_path, 1000, 50000)
 
