@@ -1,2 +1,5 @@
 *.pcap
 try*
+__pycache__/
+data/
+output/
