@@ -11,6 +11,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
+from sklearn.manifold import TSNE
 
 # For ANN
 import numpy as np
@@ -18,9 +19,10 @@ from annoy import AnnoyIndex
 
 from datetime import datetime
 
-colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "lightblue", "lightcyan","paleturquoise", 
+colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "lightblue","paleturquoise", 
           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
           "dodgerblue", "yellow"]
+
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings):    
     # Initialize an Annoy index for nearest neighbor search
@@ -142,7 +144,8 @@ class TriGraph():
         # Convert node features to PyTorch tensors
         node_features = torch.FloatTensor([list([self.graph.nodes[node]['amount']/self.graph.nodes[node]['flows'], 
                                                  self.graph.nodes[node]['length']/self.graph.nodes[node]['flows'], 
-                                                 self.graph.nodes[node]['time_delta']/self.graph.nodes[node]['flows']]) 
+                                                 self.graph.nodes[node]['time_delta']/self.graph.nodes[node]['flows']
+                                                 ]) 
                                            for node in self.graph.nodes])
 
         # Convert edges to PyTorch tensors
@@ -307,7 +310,9 @@ class TriGraph():
 # Plot the graph embeddings
 def plot_embeddings(embeddings, anomalies, graph: nx.graph):
     # Convert embeddings to a NumPy array
-    embeddings_array = embeddings.squeeze()
+    perplexity = 5
+    embeddings_array = TSNE(n_components=2, perplexity=perplexity).fit_transform(embeddings.detach().cpu().numpy())
+    
     # Plot embeddings acordding to their anomaly score
     plt.clf()
     ids = list(graph.nodes)
@@ -360,8 +365,8 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
         # Compute the embeddings and the ANN every 10 flows
         if tri_graph.count_flows - prev_count_flows >= 10:
             embeddings = tri_graph.graph_embedding()
-            embeddings = embeddings.detach().numpy()
-            anomalies = ann_algorithm(tri_graph.graph,embeddings)
+            # embeddings = embeddings.detach().numpy()
+            anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
             plot_embeddings(embeddings, anomalies, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
 
