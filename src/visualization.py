@@ -50,27 +50,27 @@ def plot_embeddings(embeddings, graph: nx.graph):
     plt.clf()
     ids = list(graph.nodes)
     
-    # Create a dictionary to map colors to labels
-    color_label_map = {}
-    for id in ids:
-        if graph.nodes[id]["side"] == "Client":
-            color = graph.nodes[id]["color"]
-            label = graph.nodes[id]["ip"].split(":")[0]
-            if color not in color_label_map:
-                color_label_map[color] = label
+    # # Create a dictionary to map colors to labels
+    # color_label_map = {}
+    # for id in ids:
+    #     if graph.nodes[id]["side"] == "Client":
+    #         color = graph.nodes[id]["color"]
+    #         label = graph.nodes[id]["ip"].split(":")[0]
+    #         if color not in color_label_map:
+    #             color_label_map[color] = label
     
     # Plot embeddings according to their anomaly score
     for i, embedding in enumerate(embeddings_array):
         id = ids[i]
-        if graph.nodes[id]["side"] != "Client":
-            continue
-        plt.scatter(embedding[0], embedding[1], c=graph.nodes[id]["color"], alpha=0.5, label=graph.nodes[id]["ip"].split(":")[0])
+        # if graph.nodes[id]["side"] != "Client":
+        #     continue
+        plt.scatter(embedding[0], embedding[1], c=graph.nodes[id]["color"], alpha=0.5)
 
     # Create the legend
-    handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in color_label_map]
-    labels = [label for label in color_label_map.values()]
-    # plt.legend(handles, labels, title="Legend", loc='best')
-    plt.legend(handles, labels, loc='best')
+    # handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) for color in color_label_map]
+    # labels = [label for label in color_label_map.values()]
+    # # plt.legend(handles, labels, title="Legend", loc='best')
+    # plt.legend(handles, labels, loc='best')
     
     # Finalize the plot
     plt.title("Graph Embeddings")

@@ -2,8 +2,8 @@ from queue import Queue
 import networkx as nx
 from vector import Vector
 
-colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
-          "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
+colors = ["lightskyblue", "lightcoral","lightgreen", "violet", "crimson",
+          "maroon", "orange", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
           "peru","yellow"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
@@ -29,6 +29,10 @@ class TriGraph():
         if ip not in self.ip_to_color:
             self.ip_to_color[ip] = colors[len(self.ip_to_color)%len(colors)]
         return self.ip_to_color[ip]
+    
+    def update_colors(self, clusters):
+        for i, node in enumerate(self.graph.nodes):
+            self.graph.nodes[node]["color"] = colors[clusters[i]]
 
     def add_nodes_edges(self, vector: Vector):
         # define colors
@@ -40,11 +44,11 @@ class TriGraph():
 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.src, flows = 0, color = src_color)
+                                ip = vector.src, flows = 0, color = "darkgray")
                 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
+                                ip = vector.dst, sip = vector.src, flows = 0, color = "darkgray")
         
         self.update_features(src_id, vector)
         self.update_features(dst_id, vector)
@@ -54,7 +58,7 @@ class TriGraph():
             self.graph.add_node(flow_node, side = 'Flow', amount = vector.amount,  
                                 length = vector.length, time_delta = vector.time_delta, 
                                 stream_number = vector.stream_number, packet_index = vector.packet_index,
-                                sip = vector.src, dip = vector.dst, flows = 1, color = "violet")
+                                sip = vector.src, dip = vector.dst, flows = 1, color = "darkgray")
             
         # add edges
         if not self.graph.has_edge(src_id, flow_node):

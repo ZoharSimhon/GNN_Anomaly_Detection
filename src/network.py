@@ -68,6 +68,7 @@ class Vector():
         self.dst_ip = dst_ip
         self.finished = False
         self.stream_number = stream_number
+        self.anomaly = False
 
     # Aggregate the features of the new packet 
     def add_packet(self, length, time_delta):
@@ -99,16 +100,20 @@ def create_plot(vectors):
     for vector in vectors:
         # Vector's position is represented by its length, time_delta, and amount
         position = np.array([vector.length, vector.time_delta, vector.amount])
-
+        
         # Plot the vector as a point at the position
-        ax.scatter(position[0], position[1], position[2], color='b')
+        if vector.anomaly:
+            ax.scatter(position[0], position[1], position[2], color='red')
+        else:    
+            ax.scatter(position[0], position[1], position[2], color='b')
+
 
     ax.set_xlabel('Length')
     ax.set_ylabel('Time Delta')
     ax.set_zlabel('Amount')    
     plt.ion()
     plt.show()
-    plt.pause(0.9)
+    plt.pause(0.5)
 
 
 def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
@@ -118,6 +123,9 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
     for i, packet in enumerate(cap):
         if i == num_of_rows:
             return
+        
+        if i % 5000 == 0:
+            create_plot(streams)
 
         if hasattr(packet, 'ip') and hasattr(packet, 'tcp'):
             # Ignore retransmitted packets 
@@ -142,6 +150,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
                     
                     # Print the flow if found anomaly
                     if ann.add_vector(vector)[0] == 'anomaly':
+                        vector.anomaly = True
                         print(f'anomaly on index {i}, stream: {stream_number}, vector: ',vector)
                 
                 # Aggregate the packet features to the existing flow 
@@ -157,6 +166,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=500):
                 
                 # Print the flow if found anomaly
                 if ann.add_vector(vector)[0] == 'anomaly':
+                    vector.anomaly = True
                     print(f'anomaly on index {i}, stream: {stream_number}, vector: ',vector)
                 
 
