@@ -48,13 +48,22 @@ class TriGraph():
         
         self.update_features(src_id, vector)
         self.update_features(dst_id, vector)
+        print(vector)
         
-        flow_node = f'{vector.stream_number}_{self.count_flows}f'
+        # flow_node = f'{vector.stream_number}_{self.count_flows}f'
+        flow_node = vector.stream_number
         if not self.graph.has_node(flow_node):
-            self.graph.add_node(flow_node, side = 'Flow', amount = vector.amount,  
-                                length = vector.length, time_delta = vector.time_delta, 
-                                stream_number = vector.stream_number, packet_index = vector.packet_index,
-                                sip = vector.src, dip = vector.dst, flows = 1, color = "violet")
+            self.graph.add_node(flow_node, side = 'Flow', amount = 0,  length = 0, time_delta = 0, 
+                                stream_number = vector.stream_number, packet_index = vector.packet_index, 
+                                sip = vector.src, dip = vector.dst,  flows = 1, color = "violet")
+        self.update_features(flow_node, vector)
+        self.graph.nodes[flow_node]["flows"] -= 1
+        
+        # if not self.graph.has_node(flow_node):
+        #     self.graph.add_node(flow_node, side = 'Flow', amount = vector.amount,  
+        #                         length = vector.length, time_delta = vector.time_delta, 
+        #                         stream_number = vector.stream_number, packet_index = vector.packet_index,
+        #                         sip = vector.src, dip = vector.dst, flows = 1, color = "violet")
             
         # add edges
         if not self.graph.has_edge(src_id, flow_node):

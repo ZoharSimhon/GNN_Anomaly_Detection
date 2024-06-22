@@ -10,7 +10,8 @@ from clustering import check_all_anomalies, clustering_algorithm
 
 def find_packet_time(packet):
     ts = int(float(packet.frame_info.time_epoch))
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    return ts
+    # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True):
     cap = FileCapture(pcap_file)
@@ -60,12 +61,17 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True)
             stream_number = int(packet.tcp.stream)
             
             if stream_number not in streams: # Got a new flow number
-                streams[stream_number] = Vector(len(packet), f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', stream_number)
+                # src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
+                if int(src_port) < int(dest_port):
+                    src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
+                else:
+                    dst, src = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
+                streams[stream_number] = Vector(len(packet), src, dst, stream_number)
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                if vector.time_delta > 0.1:
-                    vector.finished = True
+                if find_packet_time(packet) - vector.packet_index > 2:
+                    # vector.finished = True
                     vector.packet_index = find_packet_time(packet)
                     tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow

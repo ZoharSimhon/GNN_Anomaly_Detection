@@ -26,6 +26,6 @@ class Vector():
         self.finished = False
         
     def __str__(self) -> str:
-        return f'length: {self.length}, amount: {self.amount}, time_delta: {self.time_delta}, src: {self.src}, dst: {self.dst}'
+        return f'length: {self.length}, amount: {self.amount}, time_delta: {self.time_delta}, src: {self.src}, dst: {self.dst}, stream: {self.stream_number}'
     def __len__(self) -> int:
         return self.amount

@@ -23,7 +23,7 @@ def create_embeddings(self):
         # Convert node features to PyTorch tensors
         node_features = torch.FloatTensor([list([self.graph.nodes[node]['amount']/self.graph.nodes[node]['flows'], 
                                                  self.graph.nodes[node]['length']/self.graph.nodes[node]['flows'], 
-                                                 self.graph.nodes[node]['time_delta']/self.graph.nodes[node]['flows']
+                                                #  self.graph.nodes[node]['time_delta']/self.graph.nodes[node]['flows']
                                                  ]) 
                                            for node in self.graph.nodes])
 
