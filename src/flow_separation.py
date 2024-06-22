@@ -7,13 +7,40 @@ from vector import Vector
 from tri_graph import TriGraph
 from visualization import plot_embeddings
 from clustering import check_all_anomalies, clustering_algorithm
+    
+def update_flow_state(flow, packet):
+    fin_flag = packet.tcp.flags_fin == '1'
+    ack_flag = packet.tcp.flags_ack == '1'
+    
+    current_state = flow.state
+    
+    if current_state == 'ESTABLISHED':
+        if fin_flag:
+            flow.state = 'FIN_WAIT'
+    
+    elif current_state == 'FIN_WAIT':
+        if ack_flag and fin_flag:
+            flow.state = 'CLOSE_WAIT'
+        elif ack_flag:
+            flow.state = 'FIN_WAIT_ACKED'
+    
+    elif current_state == 'FIN_WAIT_ACKED':
+        if fin_flag:
+            flow.state = 'CLOSE_WAIT'
+    
+    elif current_state == 'CLOSE_WAIT':
+        if ack_flag:
+            flow.state = 'CLOSED'
+
+    if packet.tcp.flags_reset == '1':
+        flow.state = 'CLOSED'
 
 def find_packet_time(packet):
     ts = int(float(packet.frame_info.time_epoch))
     return ts
     # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True):
+def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True):
     cap = FileCapture(pcap_file)
     tri_graph = TriGraph(sliding_window_size)
     prev_time = time()
@@ -61,8 +88,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True)
             stream_number = int(packet.tcp.stream)
             
             if stream_number not in streams: # Got a new flow number
-                # src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
-                if int(src_port) < int(dest_port):
+                # Skip single resets packets
+                if packet.tcp.flags_reset == '1':
+                    continue
+                if int(src_port) > int(dest_port):
                     src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
                 else:
                     dst, src = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
@@ -78,14 +107,21 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows, algo='ann', plot=True)
                 vector.add_packet(len(packet), packet.tcp.time_delta)
 
             vector = streams[stream_number]
+            update_flow_state(vector, packet)
             # End a flow in FYN or RST flag is opened
-            if packet.tcp.flags_fin == '1' or packet.tcp.flags_reset == '1':
-                # if the stream is only fin, ignore it
-                if vector.amount == 1:
-                    vector.reset()
-                    continue
-                
+            if vector.state == 'CLOSED':
                 # Add the whole flow - after he terminated to tri_graph
                 vector.packet_index = find_packet_time(packet)
                 tri_graph.add_nodes_edges(vector)
                 streams.pop(stream_number)
+                
+            # if packet.tcp.flags_fin == '1' or packet.tcp.flags_reset == '1':
+            #     # if the stream is only fin, ignore it
+            #     if vector.amount == 1:
+            #         vector.reset()
+            #         continue
+                
+            #     # Add the whole flow - after he terminated to tri_graph
+            #     vector.packet_index = find_packet_time(packet)
+            #     tri_graph.add_nodes_edges(vector)
+            #     streams.pop(stream_number)

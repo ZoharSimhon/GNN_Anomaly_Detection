@@ -9,6 +9,7 @@ class Vector():
         self.finished = False
         self.stream_number = stream_number
         self.packet_index = 0
+        self.state = 'ESTABLISHED'
 
     # Aggregate the features on existing stream
     def add_packet(self, length, time_delta):
