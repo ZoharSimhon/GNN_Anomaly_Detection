@@ -5,6 +5,8 @@ import torch.optim as optim
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 
+from config import features
+
 # Define a Graph Convolutional Network (GCN) model for generating embeddings
 class GCN(torch.nn.Module):
     def __init__(self, num_features, hidden_size, output_size):
@@ -20,8 +22,6 @@ class GCN(torch.nn.Module):
         return x
 
 def create_embeddings(self):
-        features = ['amount', 'length', 'min_packet_length', 'max_packet_length', 'mean_packet_length']
-        
         # Convert node features to PyTorch tensors
         node_features = torch.FloatTensor([list([self.graph.nodes[node][feature]/self.graph.nodes[node]['flows'] for feature in features]) 
                                            for node in self.graph.nodes])
