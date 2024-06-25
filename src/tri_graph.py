@@ -42,17 +42,21 @@ class TriGraph():
         if not self.graph.has_node(src_ip):
             self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
-                                ip = vector.src, flows = 1, color = src_color)
+                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
+                                URG_count = 0, ip = vector.src, flows = 1, color = src_color)
+        
                 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
-                                ip = vector.src, flows = 0, color = src_color)
+                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
+                                URG_count = 0, ip = vector.src, flows = 0, color = src_color)
                 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
-                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
+                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
+                                URG_count = 0, ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
         self.update_features(src_ip, vector, 'fwd')
         self.update_features(src_id, vector, 'fwd')
@@ -64,8 +68,9 @@ class TriGraph():
         if not self.graph.has_node(flow_node):
             self.graph.add_node(flow_node, side = 'Flow', amount = 0,  length = 0, time_delta = 0, 
                                 stream_number = vector.stream_number, packet_index = vector.packet_index, 
-                                min_packet_length = 0, max_packet_length = 0, sip = vector.src, 
-                                dip = vector.dst,  flows = 1, color = "violet")
+                                min_packet_length = 0, max_packet_length = 0, sip = vector.src,
+                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
+                                URG_count = 0, dip = vector.dst,  flows = 1, color = "violet")
             # update count_flows
             self.count_flows += 1
             
@@ -122,4 +127,6 @@ class TriGraph():
             node['mean_packet_length'] = node['length']/node['amount']
         node["time_delta"] +=  vector.time_delta
         node["packet_index"] = vector.packet_index
+        for flag in vector.flags:
+            node[f'{flag}_count'] += vector.flags[flag]
         
