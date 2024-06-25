@@ -5,11 +5,11 @@ class Vector():
         self.bwd_packets_length = 0 if fwd else length
         self.fwd_packets_amount = 1 if fwd else 0
         self.bwd_packets_amount = 0 if fwd else 1
-        self.time_delta = 0.0
         self.min_bwd_packet = 0
         self.min_fwd_packet = 0
         self.max_bwd_packet = 0
         self.max_fwd_packet = 0
+        self.time_delta = 0.0
         self.src = src
         self.dst = dst
         self.stream_number = stream_number

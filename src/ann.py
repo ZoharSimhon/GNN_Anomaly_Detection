@@ -7,9 +7,11 @@ def print_node(node) -> str:
     length = node['length'] / node['flows']
     min_packet_length = node['min_packet_length'] / node['flows']
     max_packet_length = node['max_packet_length'] / node['flows']
+    mean_packet_length = node['mean_packet_length'] / node['flows']
     side = node['side']
 
-    print_str= f'amount: {amount}, length: {length}, min_length_packet: {min_packet_length}, max_length_packet: {max_packet_length} '
+    print_str= f'amount: {amount}, length: {length}, min_length_packet: {min_packet_length}, max_length_packet: {max_packet_length}, mean_packet_length: {mean_packet_length} '
+        
     if side == 'Client':
         ip = node['ip']
         print_str += f'\n on Client ip: {ip} \n'
