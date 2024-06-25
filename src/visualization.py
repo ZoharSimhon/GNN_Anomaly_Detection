@@ -3,42 +3,47 @@ import networkx as nx
 from sklearn.manifold import TSNE
 
 def visualize_directed_graph(self):
-        plt.clf()
+    plt.clf()
 
-        # Get the nodes for each subset
-        left_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
-        middle_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
-        right_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Server"]
-        
-        # Initialize positions dictionary
-        pos = {}
-        
-        # Set positions for left nodes
-        for i, node in enumerate(left_nodes):
-            pos[node] = (-1, i * 2.0 / len(left_nodes))  # Adjust the multiplier for better spacing
-        
-        # Set positions for middle nodes
-        for i, node in enumerate(middle_nodes):
-            pos[node] = (0, i * 2.0 / len(middle_nodes))
-        
-        # Set positions for right nodes
-        for i, node in enumerate(right_nodes):
-            pos[node] = (1, i * 2.0 / len(right_nodes))
-        
-        # Draw nodes
-        node_colors = [self.graph.nodes[node]["color"] for node in self.graph.nodes]
-        nx.draw_networkx_nodes(self.graph, pos, node_color=node_colors, node_size=400, node_shape='o')
-        
-        # Draw node labels
-        node_labels = {node: node for node in self.graph.nodes}
-        nx.draw_networkx_labels(self.graph, pos, labels=node_labels, font_color="white", font_size=6, verticalalignment='center')
-        
-        # Draw edges
-        nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
-        
-        plt.ion()
-        plt.show()
-        plt.pause(0.1)
+    # Get the nodes for each subset
+    client_ip_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client-IP"]
+    client_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
+    flow_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
+    server_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Server"]
+    
+    # Initialize positions dictionary
+    pos = {}
+    
+    # Set positions for Client-IP nodes
+    for i, node in enumerate(client_ip_nodes):
+        pos[node] = (-2, i * 2.0 / len(client_ip_nodes))
+
+    # Set positions for Client nodes
+    for i, node in enumerate(client_nodes):
+        pos[node] = (-1, i * 2.0 / len(client_nodes))
+
+    # Set positions for Flow nodes
+    for i, node in enumerate(flow_nodes):
+        pos[node] = (0, i * 2.0 / len(flow_nodes))
+
+    # Set positions for Server nodes
+    for i, node in enumerate(server_nodes):
+        pos[node] = (1, i * 2.0 / len(server_nodes))
+    
+    # Draw nodes
+    node_colors = [self.graph.nodes[node]["color"] for node in self.graph.nodes]
+    nx.draw_networkx_nodes(self.graph, pos, node_color=node_colors, node_size=400, node_shape='o')
+    
+    # Draw node labels
+    node_labels = {node: node for node in self.graph.nodes}
+    nx.draw_networkx_labels(self.graph, pos, labels=node_labels, font_color="white", font_size=6, verticalalignment='center')
+    
+    # Draw edges
+    nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
+    
+    plt.ion()
+    plt.show()
+    plt.pause(0.1)
 
 # Plot the graph embeddings
 def plot_embeddings(embeddings, graph: nx.graph):

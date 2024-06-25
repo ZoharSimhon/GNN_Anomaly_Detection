@@ -38,7 +38,12 @@ class TriGraph():
         
         #  add nodes
         src_id, dst_id = self.get_id(vector.src), self.get_id(vector.dst)
-
+        
+        if not self.graph.has_node(src_ip):
+            self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
+                                min_packet_length = 0, max_packet_length = 0, ip = vector.src, flows = 1, 
+                                color = src_color)
+                
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, ip = vector.src, flows = 0, 
@@ -49,9 +54,10 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, ip = vector.dst, 
                                 sip = vector.src, flows = 0, color = dst_color)
         
+        self.update_features(src_ip, vector, 'fwd')
         self.update_features(src_id, vector, 'fwd')
         self.update_features(dst_id, vector, 'bwd')
-        # print(vector)
+        self.graph.nodes[src_ip]["flows"] -= 1
         
         # flow_node = f'{vector.stream_number}_{self.count_flows}f'
         flow_node = vector.stream_number
@@ -66,6 +72,8 @@ class TriGraph():
         self.update_features(flow_node, vector, 'flow')
                     
         # add edges
+        if not self.graph.has_edge(src_ip, src_id):
+            self.graph.add_edge(src_ip, src_id)
         if not self.graph.has_edge(src_id, flow_node):
             self.graph.add_edge(src_id, flow_node)
         if not self.graph.has_edge(flow_node, dst_id):

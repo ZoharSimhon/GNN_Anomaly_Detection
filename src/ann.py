@@ -18,7 +18,7 @@ def print_node(node) -> str:
         ip = node['ip']
         print_str += f'\n on Server ip: {ip} \n'
 
-    else: # side = 'Flow
+    elif side == 'Flow':
         stream_number = node['stream_number']
         sip = node['sip']
         dip = node['dip']
