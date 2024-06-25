@@ -1,6 +1,6 @@
 # Define a class to represent a vector of network traffic data
 class Vector():
-    def __init__(self, length, src, dst, fwd, stream_number) -> None:
+    def __init__(self, length, src, dst, fwd, stream_number, flags) -> None:
         self.fwd_packets_length = length if fwd else 0
         self.bwd_packets_length = 0 if fwd else length
         self.fwd_packets_amount = 1 if fwd else 0
@@ -14,10 +14,11 @@ class Vector():
         self.dst = dst
         self.stream_number = stream_number
         self.packet_index = 0
+        self.flags = flags
         self.state = 'ESTABLISHED'
 
     # Aggregate the features on existing stream
-    def add_packet(self, length, time_delta, src):
+    def add_packet(self, length, time_delta, src, flags):
         if src == self.src:
             self.fwd_packets_amount += 1
             self.fwd_packets_length += length
@@ -36,8 +37,13 @@ class Vector():
         new_time_delta = self.time_delta + float(time_delta)
         self.time_delta = round(new_time_delta, 3)
         
-    def __str__(self) -> str:
-        return f'length: {self.length}, amount: {self.amount}, src: {self.src}, dst: {self.dst}, stream: {self.stream_number}'
+        for flag, value in flags.items():
+            self.flags[flag] += int(value)
 
-    def __len__(self) -> int:
-        return self.amount
+    def __str__(self) -> str:
+        # Get all attribute names and values using vars()
+        result = ''
+        attributes = vars(self)
+        for attr_name, attr_value in attributes.items():
+            result += f'{attr_name}: {attr_value}, '
+        return result

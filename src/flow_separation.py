@@ -88,16 +88,27 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             
             # Get the stream numner from the TCP packet
             stream_number = int(packet.tcp.stream)
+
+            flags = {
+                'FIN': int(packet.tcp.flags_fin),
+                'SYN': int(packet.tcp.flags_syn),
+                'RST': int(packet.tcp.flags_reset),
+                'PSH': int(packet.tcp.flags_push),
+                'ACK': int(packet.tcp.flags_ack),
+                'URG': int(packet.tcp.flags_urg),
+            }
+            
+            if int(src_port) > int(dest_port):
+                src, dst, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', True
+            else:
+                dst, src, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', False
             
             if stream_number not in streams: # Got a new flow number
                 # Skip single resets packets
                 if packet.tcp.flags_reset == '1':
                     continue
-                if int(src_port) > int(dest_port):
-                    src, dst, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', True
-                else:
-                    dst, src, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', False
-                streams[stream_number] = Vector(len(packet), src, dst, fwd, stream_number)
+                
+                streams[stream_number] = Vector(len(packet), src, dst, fwd, stream_number, flags)
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
@@ -106,7 +117,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                     vector.packet_index = find_packet_time(packet)
                     tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
-                vector.add_packet(len(packet), packet.tcp.time_delta, src)
+                vector.add_packet(len(packet), packet.tcp.time_delta, src, flags)
 
             vector = streams[stream_number]
             update_flow_state(vector, packet)
