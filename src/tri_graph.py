@@ -106,14 +106,15 @@ class TriGraph():
         # Update features of a node in the graph
         if direction == 'flow':
             self.graph.nodes[id]['amount'] += vector.fwd_packets_amount + vector.bwd_packets_amount
+            self.graph.nodes[id]['length'] += vector.fwd_packets_length + vector.bwd_packets_length
             self.graph.nodes[id]['min_packet_length'] = min(vector.min_bwd_packet, vector.min_fwd_packet)
             self.graph.nodes[id]['max_packet_length'] = min(vector.max_bwd_packet, vector.max_fwd_packet)
         else:   
             self.graph.nodes[id]["flows"] += 1
             self.graph.nodes[id]['amount'] += getattr(vector, f'{direction}_packets_amount')
+            self.graph.nodes[id]['length'] += getattr(vector, f'{direction}_packets_length')
             self.graph.nodes[id]['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
             self.graph.nodes[id]['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
                
-        self.graph.nodes[id]["length"] += vector.length   
         self.graph.nodes[id]["time_delta"] +=  vector.time_delta
         self.graph.nodes[id]["packet_index"] = vector.packet_index

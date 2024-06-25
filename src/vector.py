@@ -1,9 +1,10 @@
 # Define a class to represent a vector of network traffic data
 class Vector():
-    def __init__(self, length, src, dst, stream_number) -> None:
-        self.length = length
-        self.fwd_packets_amount = 1
-        self.bwd_packets_amount = 0
+    def __init__(self, length, src, dst, fwd, stream_number) -> None:
+        self.fwd_packets_length = length if fwd else 0
+        self.bwd_packets_length = 0 if fwd else length
+        self.fwd_packets_amount = 1 if fwd else 0
+        self.bwd_packets_amount = 0 if fwd else 1
         self.time_delta = 0.0
         self.min_bwd_packet = 0
         self.min_fwd_packet = 0
@@ -19,17 +20,19 @@ class Vector():
     def add_packet(self, length, time_delta, src):
         if src == self.src:
             self.fwd_packets_amount += 1
+            self.fwd_packets_length += length
             if length < self.min_fwd_packet:
                 self.min_fwd_packet = length
             if length > self.max_fwd_packet:
                 self.max_fwd_packet = length
         else:
             self.bwd_packets_amount += 1
+            self.bwd_packets_length += length
             if length < self.min_bwd_packet:
                 self.min_bwd_packet = length
             if length > self.max_bwd_packet:
                 self.max_bwd_packet = length
-        self.length += length
+                
         new_time_delta = self.time_delta + float(time_delta)
         self.time_delta = round(new_time_delta, 3)
         

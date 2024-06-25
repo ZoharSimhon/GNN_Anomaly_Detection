@@ -94,10 +94,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 if packet.tcp.flags_reset == '1':
                     continue
                 if int(src_port) > int(dest_port):
-                    src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
+                    src, dst, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', True
                 else:
-                    dst, src = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}'
-                streams[stream_number] = Vector(len(packet), src, dst, stream_number)
+                    dst, src, fwd = f'{src_ip}:{src_port}', f'{dst_ip}:{dest_port}', False
+                streams[stream_number] = Vector(len(packet), src, dst, fwd, stream_number)
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
