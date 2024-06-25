@@ -20,11 +20,10 @@ class GCN(torch.nn.Module):
         return x
 
 def create_embeddings(self):
+        features = ['amount', 'length']
+        
         # Convert node features to PyTorch tensors
-        node_features = torch.FloatTensor([list([self.graph.nodes[node]['amount']/self.graph.nodes[node]['flows'], 
-                                                 self.graph.nodes[node]['length']/self.graph.nodes[node]['flows'], 
-                                                #  self.graph.nodes[node]['time_delta']/self.graph.nodes[node]['flows']
-                                                 ]) 
+        node_features = torch.FloatTensor([list([self.graph.nodes[node][feature]/self.graph.nodes[node]['flows'] for feature in features]) 
                                            for node in self.graph.nodes])
 
         # Convert edges to PyTorch tensors

@@ -52,13 +52,15 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
         if i == num_of_rows:
             return
         
+        if i % 10000 == 0:
+            print(f'processed {i} packets')
         # Plot the graph every 2 seconds 
         if 2 <= time() - prev_time and plot:
             tri_graph.visualize_directed_graph()
             prev_time = time()
         
-        # Compute the embeddings and the ANN every 10 flows
-        if tri_graph.count_flows - prev_count_flows >= 10:
+        # Compute the embeddings and the ANN every 100 flows
+        if tri_graph.count_flows - prev_count_flows >= 100:
             embeddings = tri_graph.create_embeddings()
             if algo == 'ann':
                 anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
@@ -99,12 +101,12 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                if find_packet_time(packet) - vector.packet_index > 2:
-                    # vector.finished = True
-                    vector.packet_index = find_packet_time(packet)
-                    tri_graph.add_nodes_edges(vector)
+                # if find_packet_time(packet) - vector.packet_index > 2:
+                #     # vector.finished = True
+                #     vector.packet_index = find_packet_time(packet)
+                #     tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
-                vector.add_packet(len(packet), packet.tcp.time_delta)
+                vector.add_packet(len(packet), packet.tcp.time_delta, src)
 
             vector = streams[stream_number]
             update_flow_state(vector, packet)
@@ -114,14 +116,3 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 vector.packet_index = find_packet_time(packet)
                 tri_graph.add_nodes_edges(vector)
                 streams.pop(stream_number)
-                
-            # if packet.tcp.flags_fin == '1' or packet.tcp.flags_reset == '1':
-            #     # if the stream is only fin, ignore it
-            #     if vector.amount == 1:
-            #         vector.reset()
-            #         continue
-                
-            #     # Add the whole flow - after he terminated to tri_graph
-            #     vector.packet_index = find_packet_time(packet)
-            #     tri_graph.add_nodes_edges(vector)
-            #     streams.pop(stream_number)
