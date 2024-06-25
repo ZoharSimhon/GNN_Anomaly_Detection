@@ -34,6 +34,7 @@ class Vector():
         self.time_delta = round(new_time_delta, 3)
         
     def __str__(self) -> str:
-        return f'length: {self.length}, amount: {self.amount}, time_delta: {self.time_delta}, src: {self.src}, dst: {self.dst}, stream: {self.stream_number}'
+        return f'length: {self.length}, amount: {self.amount}, src: {self.src}, dst: {self.dst}, stream: {self.stream_number}'
+
     def __len__(self) -> int:
         return self.amount

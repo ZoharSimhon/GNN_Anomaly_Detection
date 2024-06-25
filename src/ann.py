@@ -3,12 +3,13 @@ from annoy import AnnoyIndex
 from datetime import datetime
 
 def print_node(node) -> str:
-    amount = node['amount']
-    length = node['length']
-    time_delta = node['time_delta']
+    amount = node['amount'] / node['flows']
+    length = node['length'] / node['flows']
+    min_packet_length = node['min_packet_length'] / node['flows']
+    max_packet_length = node['max_packet_length'] / node['flows']
     side = node['side']
 
-    print_str= f'amount: {amount}, length: {length}, time_delta: {time_delta}'
+    print_str= f'amount: {amount}, length: {length}, min_length_packet: {min_packet_length}, max_length_packet: {max_packet_length} '
     if side == 'Client':
         ip = node['ip']
         print_str += f'\n on Client ip: {ip} \n'
