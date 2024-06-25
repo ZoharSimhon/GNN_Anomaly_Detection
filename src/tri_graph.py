@@ -41,11 +41,13 @@ class TriGraph():
 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.src, flows = 0, color = src_color)
+                                min_packet_length = 0, max_packet_length = 0, ip = vector.src, flows = 0, 
+                                color = src_color)
                 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
-                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
+                                min_packet_length = 0, max_packet_length = 0, ip = vector.dst, 
+                                sip = vector.src, flows = 0, color = dst_color)
         
         self.update_features(src_id, vector, 'fwd')
         self.update_features(dst_id, vector, 'bwd')
@@ -56,7 +58,8 @@ class TriGraph():
         if not self.graph.has_node(flow_node):
             self.graph.add_node(flow_node, side = 'Flow', amount = 0,  length = 0, time_delta = 0, 
                                 stream_number = vector.stream_number, packet_index = vector.packet_index, 
-                                sip = vector.src, dip = vector.dst,  flows = 1, color = "violet")
+                                min_packet_length = 0, max_packet_length = 0, sip = vector.src, 
+                                dip = vector.dst,  flows = 1, color = "violet")
             # update count_flows
             self.count_flows += 1
             
@@ -95,9 +98,14 @@ class TriGraph():
         # Update features of a node in the graph
         if direction == 'flow':
             self.graph.nodes[id]['amount'] += vector.fwd_packets_amount + vector.bwd_packets_amount
+            self.graph.nodes[id]['min_packet_length'] = min(vector.min_bwd_packet, vector.min_fwd_packet)
+            self.graph.nodes[id]['max_packet_length'] = min(vector.max_bwd_packet, vector.max_fwd_packet)
         else:   
             self.graph.nodes[id]["flows"] += 1
-            self.graph.nodes[id]['amount'] += getattr(vector, f'{direction}_packets_amount')   
+            self.graph.nodes[id]['amount'] += getattr(vector, f'{direction}_packets_amount')
+            self.graph.nodes[id]['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
+            self.graph.nodes[id]['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
+               
         self.graph.nodes[id]["length"] += vector.length   
         self.graph.nodes[id]["time_delta"] +=  vector.time_delta
         self.graph.nodes[id]["packet_index"] = vector.packet_index
