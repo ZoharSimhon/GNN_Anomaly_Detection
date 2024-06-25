@@ -101,10 +101,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                # if find_packet_time(packet) - vector.packet_index > 2:
-                #     # vector.finished = True
-                #     vector.packet_index = find_packet_time(packet)
-                #     tri_graph.add_nodes_edges(vector)
+                if find_packet_time(packet) - vector.packet_index > 2:
+                    # vector.finished = True
+                    vector.packet_index = find_packet_time(packet)
+                    tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta, src)
 
