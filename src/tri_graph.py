@@ -59,8 +59,8 @@ class TriGraph():
         self.update_features(dst_id, vector, 'bwd')
         self.graph.nodes[src_ip]["flows"] -= 1
         
-        # flow_node = f'{vector.stream_number}_{self.count_flows}f'
-        flow_node = vector.stream_number
+        # flow_node = vector.stream_number
+        flow_node = f'{vector.stream_number}_{self.count_flows}f'
         if not self.graph.has_node(flow_node):
             self.graph.add_node(flow_node, side = 'Flow', amount = 0,  length = 0, time_delta = 0, 
                                 stream_number = vector.stream_number, packet_index = vector.packet_index, 
