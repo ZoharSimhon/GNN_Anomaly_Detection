@@ -43,23 +43,26 @@ class TriGraph():
             self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0, ip = vector.src, flows = 1, color = src_color)
+                                URG_count = 0, count_opened_sockets = 0, 
+                                ip = vector.src, flows = 1, color = src_color)
         
                 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0, ip = vector.src, flows = 0, color = src_color)
+                                URG_count = 0, count_opened_sockets = 0, 
+                                ip = vector.src, flows = 0, color = src_color)
                 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0, ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
+                                URG_count = 0, count_opened_sockets = 0,
+                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
-        self.update_features(src_ip, vector, 'fwd')
         self.update_features(src_id, vector, 'fwd')
+        self.update_features(src_ip, vector, 'fwd')
         self.update_features(dst_id, vector, 'bwd')
         self.graph.nodes[src_ip]["flows"] -= 1
         
@@ -70,7 +73,8 @@ class TriGraph():
                                 stream_number = vector.stream_number, packet_index = vector.packet_index, 
                                 min_packet_length = 0, max_packet_length = 0, sip = vector.src,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0, dip = vector.dst,  flows = 1, color = "violet")
+                                URG_count = 0, count_opened_sockets = 0,
+                                dip = vector.dst,  flows = 1, color = "violet")
             # update count_flows
             self.count_flows += 1
             
@@ -122,11 +126,22 @@ class TriGraph():
             node['length'] += getattr(vector, f'{direction}_packets_length')
             node['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
             node['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
+        
+        if node['side'] == 'Client-IP':
+            node['count_opened_sockets'] = 0
+            for neighbor in self.graph.neighbors(id):
+                node['count_opened_sockets'] += self.graph.nodes[neighbor]["count_opened_sockets"]
+        elif vector.state == 'CLOSED':
+            node['count_opened_sockets'] = 0
+        else:
+            node['count_opened_sockets'] = 1
+            
             
         if  node['amount'] != 0:     
             node['mean_packet_length'] = node['length']/node['amount']
         node["time_delta"] +=  vector.time_delta
         node["packet_index"] = vector.packet_index
+        
         for flag in vector.flags:
             node[f'{flag}_count'] += vector.flags[flag]
         
