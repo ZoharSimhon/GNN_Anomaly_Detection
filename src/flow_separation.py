@@ -53,7 +53,8 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             return
         
         if i % 10000 == 0:
-            print(f'processed {i} packets')
+            client_count = sum(1 for node, data in tri_graph.graph.nodes(data=True) if data.get("side") == "Client")
+            print(f'processed {i} packets, {client_count} clients exists')
         # Plot the graph every 2 seconds 
         if 2 <= time() - prev_time and plot:
             tri_graph.visualize_directed_graph()
@@ -112,10 +113,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                if find_packet_time(packet) - vector.packet_index > 2:
+                # if find_packet_time(packet) - vector.packet_index > 2:
                     # vector.finished = True
-                    vector.packet_index = find_packet_time(packet)
-                    tri_graph.add_nodes_edges(vector)
+                    # vector.packet_index = find_packet_time(packet)
+                    # tri_graph.add_nodes_edges(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta, src, flags)
 

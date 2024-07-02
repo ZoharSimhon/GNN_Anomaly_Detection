@@ -66,12 +66,11 @@ def ann_algorithm(graph, embeddings):
     # Print the anomalies nodes
     list_nodes = list(graph.nodes)
     for i, anomaly in enumerate(anomalies):
-        if anomaly:
-            anomaly_node_id = list_nodes[i]
-            anomaly_node = graph.nodes[anomaly_node_id]
-            anomaly_node_str = print_node(anomaly_node)
-            ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-            print(f'found anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
-            # print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
+        anomaly_node_id = list_nodes[anomaly]
+        anomaly_node = graph.nodes[anomaly_node_id]
+        anomaly_node_str = print_node(anomaly_node)
+        ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+        print(f'found anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+        # print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
             
     return anomalies
