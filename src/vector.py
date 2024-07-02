@@ -16,9 +16,13 @@ class Vector():
         self.packet_index = 0
         self.flags = flags
         self.state = 'ESTABLISHED'
+        self.finished = False
 
     # Aggregate the features on existing stream
     def add_packet(self, length, time_delta, src, flags):
+        if self.finished:
+            self.reset()
+
         if src == self.src:
             self.fwd_packets_amount += 1
             self.fwd_packets_length += length
@@ -47,3 +51,25 @@ class Vector():
         for attr_name, attr_value in attributes.items():
             result += f'{attr_name}: {attr_value}, '
         return result
+
+    def reset(self):
+        self.fwd_packets_length = 0
+        self.bwd_packets_length = 0
+        self.fwd_packets_amount = 0
+        self.bwd_packets_amount = 0
+        self.min_bwd_packet = 0
+        self.min_fwd_packet = 0
+        self.max_bwd_packet = 0
+        self.max_fwd_packet = 0
+        self.time_delta = 0.0
+        self.packet_index = 0
+        self.flags = {
+            'FIN': 0,
+            'SYN': 0,
+            'RST': 0,
+            'PSH': 0,
+            'ACK': 0,
+            'URG': 0,
+        }
+        self.state = 'ESTABLISHED'
+        self.finished = False
