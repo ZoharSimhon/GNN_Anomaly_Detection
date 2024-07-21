@@ -1,7 +1,9 @@
 from queue import Queue
 import networkx as nx
 from networkx import NetworkXError
+
 from vector import Vector
+from config import anomaly_score_history_size
 
 colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
@@ -44,6 +46,8 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
+                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size),
+                                anomaly_score_history =  [],
                                 ip = vector.src, flows = 1, color = src_color)
         
                 
@@ -52,6 +56,8 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
+                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size), 
+                                anomaly_score_history =  [], 
                                 ip = vector.src, flows = 0, color = src_color)
                 
             # update count_flows
@@ -62,12 +68,20 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0,
+                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size),
+                                anomaly_score_history =  [],
                                 ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
+        # add edges
+        if not self.graph.has_edge(src_ip, src_id):
+            self.graph.add_edge(src_ip, src_id)
+        if not self.graph.has_edge(src_id, dst_id):
+            self.graph.add_edge(src_id, dst_id)
+        
+        # update nodes features
         self.update_features(src_id, vector, 'fwd')
         self.update_features(src_ip, vector, 'fwd')
         self.update_features(dst_id, vector, 'bwd')
-        self.graph.nodes[src_ip]["flows"] -= 1
         
         # flow_node = vector.stream_number
         # flow_node = f'{vector.stream_number}_{self.count_flows}f'
@@ -83,11 +97,11 @@ class TriGraph():
             
         # self.update_features(flow_node, vector, 'flow')
                     
-        # add edges
-        if not self.graph.has_edge(src_ip, src_id):
-            self.graph.add_edge(src_ip, src_id)
-        if not self.graph.has_edge(src_id, dst_id):
-            self.graph.add_edge(src_id, dst_id)
+        # # add edges
+        # if not self.graph.has_edge(src_ip, src_id):
+        #     self.graph.add_edge(src_ip, src_id)
+        # if not self.graph.has_edge(src_id, dst_id):
+        #     self.graph.add_edge(src_id, dst_id)
         # if not self.graph.has_edge(src_id, flow_node):
         #     self.graph.add_edge(src_id, flow_node)
         # if not self.graph.has_edge(flow_node, dst_id):
@@ -119,28 +133,33 @@ class TriGraph():
     def update_features(self, id, vector, direction):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
-        if direction == 'flow':
-            node['amount'] += vector.fwd_packets_amount + vector.bwd_packets_amount
-            node['length'] += vector.fwd_packets_length + vector.bwd_packets_length
-            node['min_packet_length'] = min(vector.min_bwd_packet, vector.min_fwd_packet)
-            node['max_packet_length'] = max(vector.max_bwd_packet, vector.max_fwd_packet)
-            
-        else:   
-            node["flows"] += 1
-            node['amount'] += getattr(vector, f'{direction}_packets_amount')
-            node['length'] += getattr(vector, f'{direction}_packets_length')
-            node['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
-            node['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
+        # if direction == 'flow':
+        #     node['amount'] += vector.fwd_packets_amount + vector.bwd_packets_amount
+        #     node['length'] += vector.fwd_packets_length + vector.bwd_packets_length
+        #     node['min_packet_length'] = min(vector.min_bwd_packet, vector.min_fwd_packet)
+        #     node['max_packet_length'] = max(vector.max_bwd_packet, vector.max_fwd_packet)
+        # else:   
+        #     node["flows"] += 1
+        #     node['amount'] += getattr(vector, f'{direction}_packets_amount')
+        #     node['length'] += getattr(vector, f'{direction}_packets_length')
+        #     node['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
+        #     node['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
+        
+        node["flows"] += 1
+        node['amount'] += getattr(vector, f'{direction}_packets_amount')
+        node['length'] += getattr(vector, f'{direction}_packets_length')
+        node['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
+        node['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
         
         if node['side'] == 'Client-IP':
             node['count_opened_sockets'] = 0
+            node["flows"] = self.graph.degree(id)
             for neighbor in self.graph.neighbors(id):
                 node['count_opened_sockets'] += self.graph.nodes[neighbor]["count_opened_sockets"]
         elif vector.state == 'CLOSED':
             node['count_opened_sockets'] = 0
         else:
             node['count_opened_sockets'] = 1
-            
             
         if  node['amount'] != 0:     
             node['mean_packet_length'] = node['length']/node['amount']

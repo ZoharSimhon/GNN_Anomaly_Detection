@@ -2,9 +2,9 @@ import numpy as np
 from annoy import AnnoyIndex
 from datetime import datetime
 
-from config import features
+from config import features, threshold, anomaly_score_history_size
 
-def print_node(node) -> str:
+def node_to_str(node) -> str:
     print_str = ''
     for feature in features:
         feature_value = node[feature] / node['flows']
@@ -52,25 +52,45 @@ def ann_algorithm(graph, embeddings):
     # Calculate anomaly scores
     anomaly_scores = np.mean(distances, axis=1)
     
-    # Thresholding
-    # threshold = np.percentile(anomaly_scores, 99.99)  # Use the  95th percentile as a threshold
-    # anomalies = anomaly_scores > threshold
-    
     avg_distance = np.mean(anomaly_scores)
     std_distance = np.std(anomaly_scores)
-    threshold = 10
     
     anomalies = [i for i in range(len(anomaly_scores)) 
                         if (anomaly_scores[i] > avg_distance + threshold * std_distance) ]
     
     # Print the anomalies nodes
     list_nodes = list(graph.nodes)
-    for i, anomaly in enumerate(anomalies):
+    for anomaly in anomalies:
         anomaly_node_id = list_nodes[anomaly]
         anomaly_node = graph.nodes[anomaly_node_id]
-        anomaly_node_str = print_node(anomaly_node)
+        anomaly_node_str = node_to_str(anomaly_node)
         ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-        print(f'found anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
-        # print(f'found anomaly on packet number {anomaly_node["packet_index"]} (node id: {anomaly_node_id}): {anomaly_node_str}')
-            
+        # print(f'found anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+    
+    # add the anomaly score to the history queue + check anomalies nodes
+    for i, anomaly_score in enumerate(anomaly_scores):
+        node_id = list_nodes[i]
+        queue = graph.nodes[node_id]["anomaly_score_history"]
+        
+        # if queue.full():
+        #     avg_distance = np.mean(list(queue))
+        #     std_distance = np.std(list(queue))
+        
+        if len(queue) == anomaly_score_history_size:
+            avg_distance = np.mean(list(queue))
+            std_distance = np.std(list(queue))
+        
+            print("hi")    
+            if anomaly_score > avg_distance + threshold * std_distance:
+                anomaly_node = graph.nodes[anomaly_node_id]
+                anomaly_node_str = node_to_str(anomaly_node)
+                ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+                print(f'found anomaly on packet number {ts} (node id: {node_id}): {anomaly_node_str}')
+             
+        # queue.put(anomaly_score)
+        if len(queue) >= anomaly_score_history_size:
+            queue.pop(0)  # Remove the first element
+        queue.append(anomaly_score)
+    
+                
     return anomalies

@@ -2,3 +2,6 @@ features = ['amount', 'length', 'min_packet_length', 'max_packet_length', 'mean_
             'FIN_count', 'SYN_count', 'RST_count', 'PSH_count', 'ACK_count', 'URG_count',
             'count_opened_sockets', 
             ]
+
+anomaly_score_history_size  = 10
+threshold = 10

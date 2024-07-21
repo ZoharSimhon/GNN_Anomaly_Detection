@@ -61,7 +61,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             prev_time = time()
         
         # Compute the embeddings and the ANN every 100 flows
-        if tri_graph.count_flows - prev_count_flows >= 100:
+        if tri_graph.count_flows - prev_count_flows >= 10:
             embeddings = tri_graph.create_embeddings()
             if algo == 'ann':
                 anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
