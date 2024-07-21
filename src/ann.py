@@ -72,22 +72,16 @@ def ann_algorithm(graph, embeddings):
         node_id = list_nodes[i]
         queue = graph.nodes[node_id]["anomaly_score_history"]
         
-        # if queue.full():
-        #     avg_distance = np.mean(list(queue))
-        #     std_distance = np.std(list(queue))
-        
         if len(queue) == anomaly_score_history_size:
-            avg_distance = np.mean(list(queue))
-            std_distance = np.std(list(queue))
+            avg_distance = np.mean(queue)
+            std_distance = np.std(queue)
         
-            print("hi")    
             if anomaly_score > avg_distance + threshold * std_distance:
-                anomaly_node = graph.nodes[anomaly_node_id]
-                anomaly_node_str = node_to_str(anomaly_node)
-                ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-                print(f'found anomaly on packet number {ts} (node id: {node_id}): {anomaly_node_str}')
+                node = graph.nodes[node_id]
+                node_str = node_to_str(node)
+                ts = datetime.fromtimestamp(node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+                print(f'found anomaly on packet number {ts} (node id: {node_id}): {node_str}')
              
-        # queue.put(anomaly_score)
         if len(queue) >= anomaly_score_history_size:
             queue.pop(0)  # Remove the first element
         queue.append(anomaly_score)

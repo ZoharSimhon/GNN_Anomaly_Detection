@@ -3,7 +3,6 @@ import networkx as nx
 from networkx import NetworkXError
 
 from vector import Vector
-from config import anomaly_score_history_size
 
 colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
@@ -46,7 +45,6 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size),
                                 anomaly_score_history =  [],
                                 ip = vector.src, flows = 1, color = src_color)
         
@@ -56,7 +54,6 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size), 
                                 anomaly_score_history =  [], 
                                 ip = vector.src, flows = 0, color = src_color)
                 
@@ -68,7 +65,6 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0,
-                                # anomaly_score_history =  Queue(maxsize=anomaly_score_history_size),
                                 anomaly_score_history =  [],
                                 ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
