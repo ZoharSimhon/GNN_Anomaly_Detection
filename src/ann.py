@@ -29,6 +29,12 @@ def node_to_str(node) -> str:
     
     return print_str
 
+def print_anomalies(graph, anomaly_node_id, description):
+    anomaly_node = graph.nodes[anomaly_node_id]
+    anomaly_node_str = node_to_str(anomaly_node)
+    ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+    print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings):    
     # Initialize an Annoy index for nearest neighbor search
@@ -62,10 +68,7 @@ def ann_algorithm(graph, embeddings):
     list_nodes = list(graph.nodes)
     for anomaly in anomalies:
         anomaly_node_id = list_nodes[anomaly]
-        anomaly_node = graph.nodes[anomaly_node_id]
-        anomaly_node_str = node_to_str(anomaly_node)
-        ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-        # print(f'found anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+        print_anomalies(graph, anomaly_node_id, "ann")
     
     # add the anomaly score to the history queue + check anomalies nodes
     for i, anomaly_score in enumerate(anomaly_scores):
@@ -77,10 +80,7 @@ def ann_algorithm(graph, embeddings):
             std_distance = np.std(queue)
         
             if anomaly_score > avg_distance + threshold * std_distance:
-                node = graph.nodes[node_id]
-                node_str = node_to_str(node)
-                ts = datetime.fromtimestamp(node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-                print(f'found anomaly on packet number {ts} (node id: {node_id}): {node_str}')
+                print_anomalies(graph, node_id, "history")
              
         if len(queue) >= anomaly_score_history_size:
             queue.pop(0)  # Remove the first element
