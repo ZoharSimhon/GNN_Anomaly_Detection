@@ -24,8 +24,10 @@ class ANN():
 
     # Add a new vector to the annoy index
     def add_vector(self, vector):
+        means_packet_length = [vector.fwd_packets_length/vector.fwd_packets_amount, 
+                 vector.bwd_packets_length/vector.bwd_packets_amount]
         flags = list(vector.flags.values())
-        attribute_values = flags + list(vector.__dict__.values())[8:]
+        attribute_values = flags + list(vector.__dict__.values())[8:] + means_packet_length
         vector_np = np.array(attribute_values)
         
         if self.index is None:
@@ -40,25 +42,25 @@ class ANN():
 
         # Calculate distances for the first n vectors
         if self.number_of_vectors == BASE_LINE_AMOUNT:
-            for i in range (BASE_LINE_AMOUNT):
-                distances = self.index.get_nns_by_item(i, self.num_neighbors, include_distances=True, search_k=-1)[1]
-                distances = distances[1:]
-                mean_distance = np.mean(distances)
-                self.mean_distances = np.append(self.mean_distances, mean_distance)
+            # Calculate distances to the nearest neighbors
+            distances = [self.index.get_nns_by_item(i, self.num_neighbors, include_distances=True, search_k=-1)[1][1:] 
+                            for i in range(BASE_LINE_AMOUNT)]
+
+            # Calculate anomaly scores
+            self.mean_distances = np.mean(distances, axis=1)
+                
             return 'base-line'
         
         # Calculate anomaly scores
-        distances = self.index.get_nns_by_item(self.number_of_vectors-1, self.num_neighbors, include_distances=True, search_k=-1)[1]
-        distances = distances[1:]
-        mean_distance = np.mean(distances)
-        all_means = np.mean(self.mean_distances)
-        all_std = np.std(self.mean_distances)
-        # self.mean_distances = np.append(self.mean_distances, mean_distance)
-        # anomaly_score = 1- (min(mean_distance, all_means)/ max(mean_distance, all_means))
+        curr_vector_distances = self.index.get_nns_by_item(self.number_of_vectors-1, self.num_neighbors, include_distances=True, search_k=-1)[1]
+        curr_vector_distances = curr_vector_distances[1:]
+        curr_vector_mean_distance = np.mean(curr_vector_distances)
+        all_vectors_means = np.mean(self.mean_distances)
+        all_vectors_std = np.std(self.mean_distances)
 
         # Thresholding
-        if mean_distance > all_means + threshold * all_std:
-            return 'anomaly', mean_distance
+        if curr_vector_mean_distance > all_vectors_means + threshold * all_vectors_std:
+            return 'anomaly', curr_vector_mean_distance
         else:
-            self.mean_distances = np.append(self.mean_distances, mean_distance)
-            return 'normal', mean_distance
+            self.mean_distances = np.append(self.mean_distances, curr_vector_mean_distance)
+            return 'normal', curr_vector_mean_distance
