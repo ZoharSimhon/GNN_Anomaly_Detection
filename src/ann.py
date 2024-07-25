@@ -2,7 +2,7 @@ import numpy as np
 from annoy import AnnoyIndex
 from datetime import datetime
 
-from config import features, threshold, anomaly_score_history_size
+from config import features, threshold, history_threshold, anomaly_score_history_size
 
 def node_to_str(node) -> str:
     print_str = ''
@@ -79,7 +79,7 @@ def ann_algorithm(graph, embeddings):
             avg_distance = np.mean(queue)
             std_distance = np.std(queue)
         
-            if anomaly_score > avg_distance + threshold * std_distance:
+            if anomaly_score > avg_distance + history_threshold * std_distance:
                 print_anomalies(graph, node_id, "history")
              
         if len(queue) >= anomaly_score_history_size:

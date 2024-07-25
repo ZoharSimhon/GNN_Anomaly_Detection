@@ -4,4 +4,5 @@ features = ['amount', 'length', 'min_packet_length', 'max_packet_length', 'mean_
             ]
 
 anomaly_score_history_size  = 10
-threshold = 10
+threshold = 14
+history_threshold = 20

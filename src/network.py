@@ -1,7 +1,7 @@
-from pyshark import FileCapture
 import numpy as np
-import matplotlib.pyplot as plt
 from annoy import AnnoyIndex
+
+from config import threshold
 
 BASE_LINE_AMOUNT = 100
 
@@ -31,7 +31,7 @@ class ANN():
         if self.index is None:
             self.create_index(len(vector_np))
         self.index.add_item(self.number_of_vectors, vector_np)
-        self.vectors.append(self.index.get_item_vector(self.number_of_vectors))
+        self.vectors.append(vector_np)
         self.number_of_vectors += 1
 
         # Not calculating anomaly score for the first n vectors
@@ -52,14 +52,13 @@ class ANN():
         distances = distances[1:]
         mean_distance = np.mean(distances)
         all_means = np.mean(self.mean_distances)
-        self.mean_distances = np.append(self.mean_distances, mean_distance)
-        anomaly_score = 1- (min(mean_distance, all_means)/ max(mean_distance, all_means))
-
+        all_std = np.std(self.mean_distances)
+        # self.mean_distances = np.append(self.mean_distances, mean_distance)
+        # anomaly_score = 1- (min(mean_distance, all_means)/ max(mean_distance, all_means))
 
         # Thresholding
-        threshold = 0.95
-        if anomaly_score > threshold and mean_distance > all_means:
-            return 'anomaly', anomaly_score
+        if mean_distance > all_means + threshold * all_std:
+            return 'anomaly', mean_distance
         else:
             self.mean_distances = np.append(self.mean_distances, mean_distance)
-            return 'normal', anomaly_score
+            return 'normal', mean_distance
