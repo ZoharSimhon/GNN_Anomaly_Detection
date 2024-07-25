@@ -1,22 +1,26 @@
 # Define a class to represent a vector of network traffic data
 class Vector():
     def __init__(self, length, src, dst, fwd, stream_number, flags) -> None:
-        self.fwd_packets_length = length if fwd else 0
-        self.bwd_packets_length = 0 if fwd else length
-        self.fwd_packets_amount = 1 if fwd else 0
-        self.bwd_packets_amount = 0 if fwd else 1
-        self.min_bwd_packet = 0
-        self.min_fwd_packet = 0
-        self.max_bwd_packet = 0
-        self.max_fwd_packet = 0
-        self.time_delta = 0.0
+        # others
         self.src = src
         self.dst = dst
         self.stream_number = stream_number
         self.packet_index = 0
-        self.flags = flags
         self.state = 'ESTABLISHED'
         self.finished = False
+        
+        # features
+        self.flags = flags
+        self.fwd_packets_length = length if fwd else 0
+        self.bwd_packets_length = 0 if fwd else length
+        self.fwd_packets_amount = 1 if fwd else 0
+        self.bwd_packets_amount = 0 if fwd else 1
+        self.min_bwd_packet = length if fwd else 0
+        self.min_fwd_packet = 0 if fwd else length
+        self.max_bwd_packet = 0
+        self.max_fwd_packet = 0
+        self.time_delta = 0.0
+        
 
     # Aggregate the features on existing stream
     def add_packet(self, length, time_delta, src, flags):
@@ -26,14 +30,14 @@ class Vector():
         if src == self.src:
             self.fwd_packets_amount += 1
             self.fwd_packets_length += length
-            if length < self.min_fwd_packet:
+            if self.min_fwd_packet == 0 or length < self.min_fwd_packet:
                 self.min_fwd_packet = length
             if length > self.max_fwd_packet:
                 self.max_fwd_packet = length
         else:
             self.bwd_packets_amount += 1
             self.bwd_packets_length += length
-            if length < self.min_bwd_packet:
+            if self.min_bwd_packet == 0 or length < self.min_bwd_packet:
                 self.min_bwd_packet = length
             if length > self.max_bwd_packet:
                 self.max_bwd_packet = length

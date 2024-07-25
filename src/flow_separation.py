@@ -1,12 +1,14 @@
 from pyshark import FileCapture
 from time import time
 from datetime import datetime
+import numpy as np
 
 from ann import ann_algorithm
 from vector import Vector
 from tri_graph import TriGraph
-from visualization import plot_embeddings
+from visualization import plot_embeddings, plot_ann_indexes
 from clustering import check_all_anomalies, clustering_algorithm
+from network import ANN
     
 def update_flow_state(flow, packet):
     fin_flag = packet.tcp.flags_fin == '1'
@@ -40,9 +42,21 @@ def find_packet_time(packet):
     return ts
     # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
+
 def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True):
+    
+    if algo == 'network':
+        ann = ANN()
+    elif algo in ['ann', 'clustering']:
+        tri_graph = TriGraph(sliding_window_size)
+    
+    def flow_finished(vector):
+        if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':
+            print(f'anomaly on index {i}, stream: {stream_number}, vector: {vector}\n')
+        elif algo in ['ann', 'clustering']:
+            tri_graph.add_nodes_edges(vector)
+    
     cap = FileCapture(pcap_file)
-    tri_graph = TriGraph(sliding_window_size)
     prev_time = time()
     prev_count_flows = 0
 
@@ -53,26 +67,17 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             return
         
         if i % 10000 == 0:
-            client_count = sum(1 for node, data in tri_graph.graph.nodes(data=True) if data.get("side") == "Client")
-            print(f'processed {i} packets, {client_count} clients exists')
+            print(f'processed {i} packets')
+            
         # Plot the graph every 2 seconds 
         if 2 <= time() - prev_time and plot:
-            tri_graph.visualize_directed_graph()
+            if algo == 'network':
+                # create_plot(streams.values())
+                plot_ann_indexes(np.array(ann.vectors))
+            elif algo in ['ann', 'clusting']:
+                tri_graph.visualize_directed_graph()
             prev_time = time()
-        
-        # Compute the embeddings and the ANN every 100 flows
-        if tri_graph.count_flows - prev_count_flows >= 10:
-            embeddings = tri_graph.create_embeddings()
-            if algo == 'ann':
-                anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
-            elif algo == 'clustering':
-                cluster_embeddings = embeddings.detach().numpy()
-                clusters = clustering_algorithm(tri_graph.graph,cluster_embeddings)
-                check_all_anomalies(cluster_embeddings, clusters)
-            if plot:
-                plot_embeddings(embeddings, tri_graph.graph)
-            prev_count_flows = tri_graph.count_flows
-
+            
         # Check only TCP packets
         if hasattr(packet, 'ip') and hasattr(packet, 'tcp'):
 
@@ -116,7 +121,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 if find_packet_time(packet) - vector.packet_index > 2:
                     vector.finished = True
                     vector.packet_index = find_packet_time(packet)
-                    tri_graph.add_nodes_edges(vector)
+                    flow_finished(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta, src, flags)
 
@@ -126,5 +131,21 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             if vector.state == 'CLOSED':
                 # Add the whole flow - after he terminated to tri_graph
                 vector.packet_index = find_packet_time(packet)
-                tri_graph.add_nodes_edges(vector)
+                flow_finished(vector)
                 streams.pop(stream_number)
+            
+        if algo == 'network':
+            continue
+        
+        # Compute the embeddings and the ANN every 100 flows
+        if tri_graph.count_flows - prev_count_flows >= 10:
+            embeddings = tri_graph.create_embeddings()
+            if algo == 'ann':
+                anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
+            elif algo == 'clustering':
+                cluster_embeddings = embeddings.detach().numpy()
+                clusters = clustering_algorithm(tri_graph.graph,cluster_embeddings)
+                check_all_anomalies(cluster_embeddings, clusters)
+            if plot:
+                plot_embeddings(embeddings, tri_graph.graph)
+            prev_count_flows = tri_graph.count_flows

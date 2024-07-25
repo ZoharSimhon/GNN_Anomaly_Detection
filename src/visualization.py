@@ -85,3 +85,20 @@ def plot_embeddings(embeddings, graph: nx.graph):
     plt.show()
     plt.pause(0.1)
     
+
+# Plot the ann indexes
+def plot_ann_indexes(vectors):
+    tsne = TSNE(n_components=2, random_state=42, perplexity=5)
+    reduced_vectors = tsne.fit_transform(vectors)
+
+    # plt.figure(figsize=(8, 6))
+    plt.scatter(reduced_vectors[:, 0], reduced_vectors[:, 1], c='blue', marker='o')
+            
+    plt.title('t-SNE Projection of ANN Vectors')
+    plt.xlabel('Component 1')
+    plt.ylabel('Component 2')
+    
+    plt.ion()
+    plt.show()
+    plt.pause(0.1)
+    
