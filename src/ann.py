@@ -53,7 +53,7 @@ def ann_algorithm(graph, embeddings):
     index.build(n_trees)
     
     # Calculate distances to the nearest neighbors
-    distances = [index.get_nns_by_item(i, num_neighbors, include_distances=True, search_k=search_k)[1] for i in range(embeddings.shape[0])]
+    distances = [index.get_nns_by_item(i, num_neighbors, include_distances=True, search_k=search_k)[1][1:] for i in range(embeddings.shape[0])]
     
     # Calculate anomaly scores
     anomaly_scores = np.mean(distances, axis=1)
