@@ -1,7 +1,7 @@
 import numpy as np
 from annoy import AnnoyIndex
 
-from config import threshold
+from config import network_threshold
 
 BASE_LINE_AMOUNT = 100
 
@@ -59,7 +59,7 @@ class ANN():
         all_vectors_std = np.std(self.mean_distances)
 
         # Thresholding
-        if curr_vector_mean_distance > all_vectors_means + threshold * all_vectors_std:
+        if curr_vector_mean_distance > all_vectors_means + network_threshold * all_vectors_std:
             return 'anomaly', curr_vector_mean_distance
         else:
             self.mean_distances = np.append(self.mean_distances, curr_vector_mean_distance)
