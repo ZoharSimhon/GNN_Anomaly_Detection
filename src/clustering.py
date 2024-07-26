@@ -6,9 +6,10 @@ import hdbscan
 # For anomalies
 from sklearn.metrics import pairwise_distances_argmin_min
 
+from config import clustering_threshold
 
 # Function to perform clustering algorithm
-def clustering_algorithm(graph, embeddings): 
+def clustering_algorithm(embeddings): 
     
     # Initialize HDBSCAN
     clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean')
@@ -55,48 +56,40 @@ def calculate_density(vectors, labels):
         densities.append(current_density)
     return densities
 
-def check_anomalies(elements, threshold=1.5):
-    avg_distance = np.mean(elements)
-    std_distance = np.std(elements)
-    
-    unusual_distances = [i for i in range(len(elements)) 
-                        if (elements[i] > avg_distance + threshold * std_distance) 
-                        or  (elements[i] < avg_distance - threshold * std_distance)]
-    
-    return unusual_distances
 
-def check_all_anomalies(embeddings, clusters):
-    # Count the number of vectors in each cluster
+def check_all_anomalies(graph, embeddings, clusters):
+    list_nodes = list(graph.nodes)
+    
+    def check_and_print_anomalies(elements, description = None):
+        # calculate anomalies
+        elements = elements[1:] #ignore the isolated nodes
+        avg_elements = np.mean(elements)
+        std_elements = np.std(elements)
+        
+        unusual_elements = [i for i in range(len(elements)) 
+                            if (elements[i] > avg_elements + clustering_threshold * std_elements) 
+                            or  (elements[i] < avg_elements - clustering_threshold * std_elements)]
+        
+        # print anomalies
+        for cluster in unusual_elements:
+            print(f"Cluster {cluster} is anomaly with the nodes:")
+            for i, node in enumerate(clusters):
+                if node == cluster:
+                    print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
+            print()
+        
+    # Check for anomaly clusters amount
     cluster_counts = count_vectors_in_clusters(clusters)
-    
-    # Check for anomaly clusters count
-    unusual_clusters = check_anomalies(list(cluster_counts.values()))
-    if unusual_clusters:
-        print("Number of vectors in each cluster:", cluster_counts)
-        print("Unusual clusters (amount):", unusual_clusters)
-        print()
-        
-    
-    # Calculate densities in each cluster
+    check_and_print_anomalies(list(cluster_counts.values()), 'amount')
+
+    # Check for anomaly clusters densities
     cluster_densities = calculate_density(embeddings, clusters)
+    check_and_print_anomalies(cluster_densities, "density")
     
-    # Check for anomaly clusters
-    unusual_clusters = check_anomalies(cluster_densities)
-    if unusual_clusters:
-        print("Densities in each cluster:", cluster_densities)
-        print("Unusual clusters (density):", unusual_clusters)
-        print()
-        
-    # Calculate distances between centroids
+    # Check for anomaly distances between centroids
     centroids = find_centroids(embeddings, clusters)
     centroid_distances = calculate_centroid_distances(centroids)
+    check_and_print_anomalies(centroid_distances, "distances")
     
-    # Check for anomaly distances
-    unusual_distances = check_anomalies(centroid_distances)
-    if unusual_distances:
-        print("Distances between centroids:", centroid_distances)
-        print("Unusual distances:", unusual_distances)
-        print()
-        
     print()
     print()

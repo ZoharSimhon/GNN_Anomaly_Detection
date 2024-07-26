@@ -141,11 +141,11 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
         if tri_graph.count_flows - prev_count_flows >= 100:
             embeddings = tri_graph.create_embeddings()
             if algo == 'ann':
-                anomalies = ann_algorithm(tri_graph.graph,embeddings.detach().numpy())
+                anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy())
             elif algo == 'clustering':
                 cluster_embeddings = embeddings.detach().numpy()
-                clusters = clustering_algorithm(tri_graph.graph,cluster_embeddings)
-                check_all_anomalies(cluster_embeddings, clusters)
+                clusters = clustering_algorithm(cluster_embeddings)
+                check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters)
             if plot:
                 plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
