@@ -64,7 +64,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
     
     for i, packet in enumerate(cap):
         if i == num_of_rows:
-            return
+            break
         
         if i % 10000 == 0:
             print(f'processed {i} packets')
@@ -149,3 +149,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             if plot:
                 plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
+
+    
+    # accuracy calculation
+    # from sklearn.metrics import accuracy_score, classification_report
+    # accuracy = accuracy_score(label, y_pred)
+    # classification_report(label, y_pred)
+    

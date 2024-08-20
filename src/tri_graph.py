@@ -4,6 +4,8 @@ from networkx import NetworkXError
 
 from vector import Vector
 
+from config import attacker_ip, victom_ip
+
 colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
           "peru","yellow"]
@@ -37,6 +39,10 @@ class TriGraph():
         src_ip, dst_ip = vector.src.split(":")[0], vector.dst.split(":")[0]
         src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
         
+        # check label
+        src_label = src_ip in [attacker_ip, victom_ip]
+        dst_label = dst_ip in [attacker_ip, victom_ip]
+        
         #  add nodes
         src_id, dst_id = self.get_id(vector.src), self.get_id(vector.dst)
         
@@ -45,16 +51,15 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                anomaly_score_history =  [],
+                                anomaly_score_history =  [], pred = False, label = src_label,
                                 ip = vector.src, flows = 1, color = src_color)
-        
                 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                anomaly_score_history =  [], 
+                                anomaly_score_history =  [], pred = False, label = src_label,
                                 ip = vector.src, flows = 0, color = src_color)
                 
             # update count_flows
@@ -65,7 +70,7 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0,
-                                anomaly_score_history =  [],
+                                anomaly_score_history =  [], pred = False, label = dst_label,
                                 ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
         # add edges
@@ -79,67 +84,9 @@ class TriGraph():
         self.update_features(src_ip, vector, 'fwd')
         self.update_features(dst_id, vector, 'bwd')
         
-        # flow_node = vector.stream_number
-        # flow_node = f'{vector.stream_number}_{self.count_flows}f'
-        # if not self.graph.has_node(flow_node):
-        #     self.graph.add_node(flow_node, side = 'Flow', amount = 0,  length = 0, time_delta = 0, 
-        #                         stream_number = vector.stream_number, packet_index = vector.packet_index, 
-        #                         min_packet_length = 0, max_packet_length = 0, sip = vector.src,
-        #                         FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-        #                         URG_count = 0, count_opened_sockets = 0,
-        #                         dip = vector.dst,  flows = 1, color = "violet")
-        #     # update count_flows
-        #     self.count_flows += 1
-            
-        # self.update_features(flow_node, vector, 'flow')
-                    
-        # # add edges
-        # if not self.graph.has_edge(src_ip, src_id):
-        #     self.graph.add_edge(src_ip, src_id)
-        # if not self.graph.has_edge(src_id, dst_id):
-        #     self.graph.add_edge(src_id, dst_id)
-        # if not self.graph.has_edge(src_id, flow_node):
-        #     self.graph.add_edge(src_id, flow_node)
-        # if not self.graph.has_edge(flow_node, dst_id):
-        #     self.graph.add_edge(flow_node, dst_id)
-        
-        
-        # update q (FIFO style)
-        # if self.q.full():
-        #     index = self.q.get()
-        #     try:
-        #         neighbors = self.graph.neighbors(index)
-                
-        #         node_delete = [index]
-        #         # Update all the entities (Server + Client) that connected to this flow
-        #         for neighbor in neighbors:
-        #             self.graph.nodes[neighbor]["flows"] -= 1
-        #             if self.graph.nodes[neighbor]["flows"] == 0:
-        #                 node_delete.append(neighbor)
-            
-        #         # Delete the last flow and isolated nodes from tri_graph
-        #         for node in node_delete:
-        #             self.graph.remove_node(node)
-        #     except NetworkXError as e:
-        #         print(e)
-
-        # self.q.put(flow_node)
-            
-
     def update_features(self, id, vector, direction):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
-        # if direction == 'flow':
-        #     node['amount'] += vector.fwd_packets_amount + vector.bwd_packets_amount
-        #     node['length'] += vector.fwd_packets_length + vector.bwd_packets_length
-        #     node['min_packet_length'] = min(vector.min_bwd_packet, vector.min_fwd_packet)
-        #     node['max_packet_length'] = max(vector.max_bwd_packet, vector.max_fwd_packet)
-        # else:   
-        #     node["flows"] += 1
-        #     node['amount'] += getattr(vector, f'{direction}_packets_amount')
-        #     node['length'] += getattr(vector, f'{direction}_packets_length')
-        #     node['min_packet_length'] += getattr(vector, f'min_{direction}_packet')
-        #     node['max_packet_length'] += getattr(vector, f'max_{direction}_packet')
         
         node["flows"] += 1
         node['amount'] += getattr(vector, f'{direction}_packets_amount')

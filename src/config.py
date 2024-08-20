@@ -9,3 +9,6 @@ ann_threshold = 14
 ann_history_threshold = 20
 clustering_threshold = 5
 network_threshold = 14
+
+attacker_ip = ""
+victom_ip = ""

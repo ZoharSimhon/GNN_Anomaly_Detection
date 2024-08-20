@@ -69,6 +69,7 @@ def ann_algorithm(graph, embeddings):
     for anomaly in anomalies:
         anomaly_node_id = list_nodes[anomaly]
         print_anomalies(graph, anomaly_node_id, "ann")
+        graph.nodes[node_id]["pred"] = True
     
     # add the anomaly score to the history queue + check anomalies nodes
     for i, anomaly_score in enumerate(anomaly_scores):
@@ -81,6 +82,7 @@ def ann_algorithm(graph, embeddings):
         
             if anomaly_score > avg_distance + ann_history_threshold * std_distance:
                 print_anomalies(graph, node_id, "history")
+                graph.nodes[node_id]["pred"] = True
              
         if len(queue) >= anomaly_score_history_size:
             queue.pop(0)  # Remove the first element
