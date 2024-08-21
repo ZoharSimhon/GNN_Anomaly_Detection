@@ -2,6 +2,7 @@ from pyshark import FileCapture
 from time import time
 from datetime import datetime
 import numpy as np
+from sklearn.metrics import accuracy_score, classification_report
 
 from ann import ann_algorithm
 from vector import Vector
@@ -9,7 +10,7 @@ from tri_graph import TriGraph
 from visualization import plot_embeddings, plot_ann_indexes
 from clustering import check_all_anomalies, clustering_algorithm
 from network import ANN
-from sklearn.metrics import accuracy_score, classification_report
+from combined_algo import check_anomalies
 
 def update_flow_state(flow, packet):
     fin_flag = packet.tcp.flags_fin == '1'
@@ -141,12 +142,14 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
         # Compute the embeddings and the ANN every 100 flows
         if tri_graph.count_flows - prev_count_flows >= 100:
             embeddings = tri_graph.create_embeddings()
-            if algo == 'ann':
+            if algo == 'ann' or algo == 'combined':
                 anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy())
-            elif algo == 'clustering':
+            elif algo == 'clustering' or algo == 'combined':
                 cluster_embeddings = embeddings.detach().numpy()
                 clusters = clustering_algorithm(cluster_embeddings)
                 check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters)
+            if algo == 'combined':
+                check_anomalies(tri_graph.graph)
             if plot:
                 plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
@@ -160,11 +163,3 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
     accuracy = accuracy_score(y_true, y_pred)
     print(f"Accuracy: {accuracy:.2f}")
     print(classification_report(y_true, y_pred))
-
-
-
-    # accuracy calculation
-    # from sklearn.metrics import accuracy_score, classification_report
-    # accuracy = accuracy_score(label, y_pred)
-    # classification_report(label, y_pred)
-    

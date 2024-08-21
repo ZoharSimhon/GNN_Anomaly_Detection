@@ -51,7 +51,8 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                anomaly_score_history =  [], pred = False, label = src_label,
+                                anomaly_score_history =  [], 
+                                pred = False, label = src_label, cluster_pred = False, ann_pred = False
                                 ip = vector.src, flows = 1, color = src_color)
                 
         if not self.graph.has_node(src_id):
@@ -59,7 +60,8 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0, 
-                                anomaly_score_history =  [], pred = False, label = src_label,
+                                anomaly_score_history =  [], 
+                                pred = False, label = src_label, cluster_pred = False, ann_pred = False
                                 ip = vector.src, flows = 0, color = src_color)
                 
             # update count_flows
@@ -70,7 +72,8 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0,
-                                anomaly_score_history =  [], pred = False, label = dst_label,
+                                anomaly_score_history =  [],
+                                pred = False, label = src_label, cluster_pred = False, ann_pred = False
                                 ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
         # add edges
