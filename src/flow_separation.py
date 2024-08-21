@@ -2,7 +2,6 @@ from pyshark import FileCapture
 from time import time
 from datetime import datetime
 import numpy as np
-from sklearn.metrics import accuracy_score, classification_report
 
 from ann import ann_algorithm
 from vector import Vector
@@ -11,6 +10,7 @@ from visualization import plot_embeddings, plot_ann_indexes
 from clustering import check_all_anomalies, clustering_algorithm
 from network import ANN
 from combined_algo import check_anomalies
+from results import measure_results
 
 def update_flow_state(flow, packet):
     fin_flag = packet.tcp.flags_fin == '1'
@@ -154,12 +154,4 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
     
-    
-    # Extracting the 'pred' and 'label' attributes
-    y_pred = [data['pred'] for _, data in tri_graph.graph.nodes(data=True)]
-    y_true = [data['label'] for _, data in tri_graph.graph.nodes(data=True)]
-
-    # Calculate accuracy
-    accuracy = accuracy_score(y_true, y_pred)
-    print(f"Accuracy: {accuracy:.2f}")
-    print(classification_report(y_true, y_pred))
+    measure_results(tri_graph.graph)
