@@ -69,7 +69,7 @@ def ann_algorithm(graph, embeddings):
     for anomaly in anomalies:
         anomaly_node_id = list_nodes[anomaly]
         print_anomalies(graph, anomaly_node_id, "ann")
-        graph.nodes[node_id]["pred"] = True
+        graph.nodes[anomaly_node_id]["pred"] = True
     
     # add the anomaly score to the history queue + check anomalies nodes
     for i, anomaly_score in enumerate(anomaly_scores):

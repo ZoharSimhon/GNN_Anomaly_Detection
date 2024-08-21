@@ -76,6 +76,7 @@ def check_all_anomalies(graph, embeddings, clusters):
             for i, node in enumerate(clusters):
                 if node == cluster:
                     print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
+                    graph.nodes[list_nodes[i]]["pred"] = True
             print()
         
     # Check for anomaly clusters amount
