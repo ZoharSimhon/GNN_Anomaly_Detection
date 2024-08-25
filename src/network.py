@@ -24,8 +24,10 @@ class ANN():
 
     # Add a new vector to the annoy index
     def add_vector(self, vector):
-        means_packet_length = [vector.fwd_packets_length/vector.fwd_packets_amount, 
-                 vector.bwd_packets_length/vector.bwd_packets_amount]
+        fwd_mean =  0 if vector.fwd_packets_amount == 0 else vector.fwd_packets_length/vector.fwd_packets_amount
+        bwd_mean =  0 if vector.bwd_packets_amount == 0 else vector.bwd_packets_length/vector.bwd_packets_amount
+            
+        means_packet_length = [fwd_mean, bwd_mean]
         flags = list(vector.flags.values())
         attribute_values = flags + list(vector.__dict__.values())[8:] + means_packet_length
         vector_np = np.array(attribute_values)
