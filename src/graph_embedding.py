@@ -5,7 +5,7 @@ import torch.optim as optim
 from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 
-from config import features
+from config import features, hidden_size, output_size
 
 # Define a Graph Convolutional Network (GCN) model for generating embeddings
 class GCN(torch.nn.Module):
@@ -38,8 +38,6 @@ def create_embeddings(self):
 
         # Initialize the neural network
         num_features = len(node_features[0])
-        hidden_size = 256
-        output_size = 128
         
         if self.gcn_model is None:
             self.gcn_model = GCN(num_features, hidden_size, output_size)
