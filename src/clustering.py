@@ -57,7 +57,7 @@ def calculate_density(vectors, labels):
     return densities
 
 
-def check_all_anomalies(graph, embeddings, clusters):
+def check_all_anomalies(graph, embeddings, clusters, to_print=True):
     list_nodes = list(graph.nodes)
     
     def check_and_print_anomalies(elements, description = None):
@@ -72,13 +72,16 @@ def check_all_anomalies(graph, embeddings, clusters):
         
         # print anomalies
         for cluster in unusual_elements:
-            print(f"Cluster {cluster} is anomaly with the nodes:")
+            if to_print:
+                print(f"Cluster {cluster} is anomaly with the nodes:")
             for i, node in enumerate(clusters):
                 if node == cluster:
-                    print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
+                    if to_print:
+                        print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
                     graph.nodes[list_nodes[i]]["pred"] = True
                     graph.nodes[list_nodes[i]]["cluster_pred"] = True
-            print()
+            if to_print:
+                print()
         
     # Check for anomaly clusters amount
     cluster_counts = count_vectors_in_clusters(clusters)
@@ -92,6 +95,6 @@ def check_all_anomalies(graph, embeddings, clusters):
     centroids = find_centroids(embeddings, clusters)
     centroid_distances = calculate_centroid_distances(centroids)
     check_and_print_anomalies(centroid_distances, "distances")
-    
-    print()
-    print()
+    if to_print:
+        print()
+        print()

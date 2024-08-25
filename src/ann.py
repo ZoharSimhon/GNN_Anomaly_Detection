@@ -36,7 +36,7 @@ def print_anomalies(graph, anomaly_node_id, description):
     print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
 
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
-def ann_algorithm(graph, embeddings):    
+def ann_algorithm(graph, embeddings, to_print=True):    
     # Initialize an Annoy index for nearest neighbor search
     dimension = 32  # Number of features in the vectors
     index = AnnoyIndex(dimension, 'euclidean')
@@ -68,7 +68,8 @@ def ann_algorithm(graph, embeddings):
     list_nodes = list(graph.nodes)
     for anomaly in anomalies:
         anomaly_node_id = list_nodes[anomaly]
-        print_anomalies(graph, anomaly_node_id, "ann")
+        if to_print:
+            print_anomalies(graph, anomaly_node_id, "ann")
         graph.nodes[anomaly_node_id]["pred"] = True
         graph.nodes[anomaly_node_id]["ann_pred"] = True
     
@@ -82,7 +83,8 @@ def ann_algorithm(graph, embeddings):
             std_distance = np.std(queue)
         
             if anomaly_score > avg_distance + ann_history_threshold * std_distance:
-                print_anomalies(graph, node_id, "history")
+                if to_print:
+                    print_anomalies(graph, node_id, "history")
                 graph.nodes[node_id]["pred"] = True
                 graph.nodes[node_id]["ann_pred"] = True
              

@@ -49,13 +49,13 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
     
     if algo == 'network':
         ann = ANN()
-    elif algo in ['ann', 'clustering']:
+    elif algo in ['ann', 'clustering', 'combined']:
         tri_graph = TriGraph(sliding_window_size)
     
     def flow_finished(vector):
         if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':
             print(f'anomaly on index {i}, stream: {stream_number}, vector: {vector}\n')
-        elif algo in ['ann', 'clustering']:
+        elif algo in ['ann', 'clustering', 'combined']:
             tri_graph.add_nodes_edges(vector)
     
     cap = FileCapture(pcap_file)
@@ -140,14 +140,14 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             continue
         
         # Compute the embeddings and the ANN every 100 flows
-        if tri_graph.count_flows - prev_count_flows >= 100:
+        if tri_graph.count_flows - prev_count_flows >= 2000:
             embeddings = tri_graph.create_embeddings()
             if algo == 'ann' or algo == 'combined':
-                anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy())
-            elif algo == 'clustering' or algo == 'combined':
+                anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
+            if algo == 'clustering' or algo == 'combined':
                 cluster_embeddings = embeddings.detach().numpy()
                 clusters = clustering_algorithm(cluster_embeddings)
-                check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters)
+                check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
             if algo == 'combined':
                 check_anomalies(tri_graph.graph)
             if plot:
