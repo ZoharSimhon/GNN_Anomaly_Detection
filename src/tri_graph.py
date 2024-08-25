@@ -18,6 +18,7 @@ class TriGraph():
         self.count_flows = 1
         self.q = Queue(maxsize=sliding_window_size)
         self.ip_to_color = {}
+        self.gcn_model = None
     
     from graph_embedding import create_embeddings
     from visualization import visualize_directed_graph

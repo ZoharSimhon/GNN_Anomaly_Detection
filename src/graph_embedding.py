@@ -38,13 +38,14 @@ def create_embeddings(self):
 
         # Initialize the neural network
         num_features = len(node_features[0])
-        hidden_size = 64
-        output_size = 32
+        hidden_size = 256
+        output_size = 128
         
-        model = GCN(num_features, hidden_size, output_size)
-        model.train()
-        model.eval()
+        if self.gcn_model is None:
+            self.gcn_model = GCN(num_features, hidden_size, output_size)
+        self.gcn_model.train()
+        self.gcn_model.eval()
 
-        embeddings = model(node_features, edge_index)
+        embeddings = self.gcn_model(node_features, edge_index)
                 
         return embeddings
