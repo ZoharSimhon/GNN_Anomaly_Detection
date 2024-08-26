@@ -10,8 +10,8 @@ ann_history_threshold = 20
 clustering_threshold = 5
 network_threshold = 14
 
-hidden_size = 256
-output_size = 128
+hidden_size = 128
+output_size = 64
 
 attacker_ip = "172.16.0.1"
 victom_ip = "192.168.10.50"
