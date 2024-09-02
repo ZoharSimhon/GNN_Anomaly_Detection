@@ -2,18 +2,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch_geometric.nn import GATConv
+from torch_geometric.nn import SAGEConv
 import torch.nn.functional as F
 
 from config import features, hidden_size, output_size
 
-# Define a Graph Attention Network (GAT) model for generating embeddings
-class GAT(torch.nn.Module):
-    def __init__(self, num_features, hidden_size, output_size, heads=1):
+# Define a GraphSAGE model for generating embeddings
+class GraphSAGE(torch.nn.Module):
+    def __init__(self, num_features, hidden_size, output_size):
         super().__init__()
         torch.manual_seed(1234567)
-        self.conv1 = GATConv(num_features, hidden_size, heads=heads, concat=True)
-        self.conv2 = GATConv(hidden_size * heads, output_size, heads=1, concat=False)
+        self.conv1 = SAGEConv(num_features, hidden_size)
+        self.conv2 = SAGEConv(hidden_size, output_size)
 
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
@@ -40,7 +40,7 @@ def create_embeddings(self):
     num_features = len(node_features[0])
     
     if self.gcn_model is None:
-        self.gcn_model = GAT(num_features, hidden_size, output_size)
+        self.gcn_model = GraphSAGE(num_features, hidden_size, output_size)
     self.gcn_model.train()
     self.gcn_model.eval()
 
