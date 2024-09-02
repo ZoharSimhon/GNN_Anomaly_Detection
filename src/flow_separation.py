@@ -72,7 +72,7 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             print(f'processed {i} packets')
 
         # Plot the graph every 2 seconds 
-        if 2 <= time() - prev_time and plot:
+        if plot and 2 <= time() - prev_time :
             if algo == 'network':
                 # create_plot(streams.values())
                 plot_ann_indexes(np.array(ann.vectors))
