@@ -2,7 +2,7 @@ import numpy as np
 from annoy import AnnoyIndex
 from datetime import datetime
 
-from config import features, ann_threshold, ann_history_threshold, anomaly_score_history_size
+from config import features, ann_threshold, ann_history_threshold, anomaly_score_history_size, output_size
 
 def node_to_str(node) -> str:
     print_str = ''
@@ -38,7 +38,7 @@ def print_anomalies(graph, anomaly_node_id, description):
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings, to_print=True):    
     # Initialize an Annoy index for nearest neighbor search
-    dimension = 32  # Number of features in the vectors
+    dimension = output_size  # Number of features in the vectors
     index = AnnoyIndex(dimension, 'euclidean')
 
     # Add vectors to the index

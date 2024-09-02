@@ -36,6 +36,9 @@ class TriGraph():
         return self.ip_to_color[ip]
 
     def add_nodes_edges(self, vector: Vector):
+        # update count_flows
+        self.count_flows += 1
+        
         # define colors
         src_ip, dst_ip = vector.src.split(":")[0], vector.dst.split(":")[0]
         src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
@@ -64,9 +67,6 @@ class TriGraph():
                                 anomaly_score_history =  [], 
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
                                 ip = vector.src, flows = 0, color = src_color)
-                
-            # update count_flows
-            self.count_flows += 1
 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
@@ -74,7 +74,7 @@ class TriGraph():
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0, count_opened_sockets = 0,
                                 anomaly_score_history =  [],
-                                pred = False, label = src_label, cluster_pred = False, ann_pred = False,
+                                pred = False, label = dst_label, cluster_pred = False, ann_pred = False,
                                 ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
         
         # add edges
