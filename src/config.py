@@ -1,6 +1,6 @@
 features = ['amount', 'length', 'mean_packet_length', 
             'FIN_count', 'SYN_count', 'RST_count', 'PSH_count', 'ACK_count', 'URG_count',
-            'count_opened_sockets', 
+            # 'count_opened_sockets', 
             # 'min_packet_length', 'max_packet_length',
             ]
 
