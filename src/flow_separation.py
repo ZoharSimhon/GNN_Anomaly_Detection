@@ -71,14 +71,14 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
         if i % 10000 == 0:
             print(f'processed {i} packets')
 
-        # Plot the graph every 2 seconds 
-        if plot and 2 <= time() - prev_time :
-            if algo == 'network':
-                # create_plot(streams.values())
-                plot_ann_indexes(np.array(ann.vectors))
-            elif algo in ['ann', 'clusting']:
-                tri_graph.visualize_directed_graph()
-            prev_time = time()
+        # # Plot the graph every 2 seconds 
+        # if plot and 2 <= time() - prev_time :
+        #     if algo == 'network':
+        #         # create_plot(streams.values())
+        #         plot_ann_indexes(np.array(ann.vectors))
+        #     elif algo in ['ann', 'clustering']:
+        #         tri_graph.visualize_directed_graph()
+        #     prev_time = time()
             
         # Check only TCP packets
         if hasattr(packet, 'ip') and hasattr(packet, 'tcp'):
@@ -152,7 +152,9 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
             if algo == 'combined':
                 check_anomalies(tri_graph.graph)
             if plot:
+                tri_graph.visualize_directed_graph()
                 plot_embeddings(embeddings, tri_graph.graph)
+                tri_graph = TriGraph()
             prev_count_flows = tri_graph.count_flows
     
     measure_results(tri_graph.graph)

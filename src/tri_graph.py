@@ -6,9 +6,10 @@ from vector import Vector
 
 from config import attacker_ip, victom_ip
 
-colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
-          "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
-          "peru","yellow"]
+colors = ["lightskyblue"]
+# colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
+#           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
+#           "peru","yellow"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
@@ -46,6 +47,8 @@ class TriGraph():
         # check label
         src_label = src_ip in [attacker_ip, victom_ip]
         dst_label = dst_ip in [attacker_ip, victom_ip]
+        src_color = "lightcoral" if src_label else src_color
+        dst_color = "lightcoral" if dst_label else dst_color
         
         #  add nodes
         src_id, dst_id = self.get_id(vector.src), self.get_id(vector.dst)

@@ -1,9 +1,6 @@
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
 from torch_geometric.nn import GCNConv
-import torch.nn.functional as F
 
 from config import features, hidden_size, output_size
 

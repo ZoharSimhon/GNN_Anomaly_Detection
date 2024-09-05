@@ -2,7 +2,11 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from sklearn.manifold import TSNE
 
+graph_index = 0
+embedding_index =0
+
 def visualize_directed_graph(self):
+    global graph_index
     plt.clf()
 
     # Get the nodes for each subset
@@ -41,12 +45,12 @@ def visualize_directed_graph(self):
     # Draw edges
     nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
     
-    plt.ion()
-    plt.show()
-    plt.pause(0.1)
+    plt.savefig(f'../output/imgs_dos_clusters/graph_imgs/graph{graph_index}.png')
+    graph_index += 1
 
 # Plot the graph embeddings
 def plot_embeddings(embeddings, graph: nx.graph):
+    global embedding_index
     # Convert embeddings to a NumPy array
     perplexity = 5
     embeddings_array = TSNE(n_components=2, perplexity=perplexity).fit_transform(embeddings.detach().cpu().numpy())
@@ -81,11 +85,9 @@ def plot_embeddings(embeddings, graph: nx.graph):
     plt.title("Graph Embeddings")
     plt.xlabel("Dimension 1")
     plt.ylabel("Dimension 2")
-    plt.ion()
-    plt.show()
-    plt.pause(0.1)
+    plt.savefig(f'../output/imgs_dos_clusters/embedding_imgs/embedding{embedding_index}.png')
+    embedding_index += 1
     
-
 # Plot the ann indexes
 def plot_ann_indexes(vectors):
     tsne = TSNE(n_components=2, random_state=42, perplexity=5)
@@ -101,4 +103,3 @@ def plot_ann_indexes(vectors):
     plt.ion()
     plt.show()
     plt.pause(0.1)
-    
