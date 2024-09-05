@@ -120,7 +120,7 @@ class TriGraph():
             node[f'{flag}_count'] += vector.flags[flag]
         
         
-    def add_nodes_edges_csv(self, row):
+    def add_nodes_edges_csv(self, row, pred, label, node_to_index):
         # update count_flows
         self.count_flows += 1
         
@@ -138,6 +138,9 @@ class TriGraph():
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
         if not self.graph.has_node(src_ip):
+            node_to_index[src_ip] = len(pred)
+            pred.append(False)
+            label.append(src_label)
             self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
@@ -147,6 +150,9 @@ class TriGraph():
                                 ip = src, flows = 1, color = src_color)
                 
         if not self.graph.has_node(src_id):
+            node_to_index[src_id] = len(pred)
+            pred.append(False)
+            label.append(src_label)
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
@@ -156,6 +162,9 @@ class TriGraph():
                                 ip = src, flows = 0, color = src_color)
 
         if not self.graph.has_node(dst_id):
+            node_to_index[dst_id] = len(pred)
+            pred.append(False)
+            label.append(dst_label)
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
