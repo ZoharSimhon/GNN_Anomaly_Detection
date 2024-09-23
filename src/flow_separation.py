@@ -70,15 +70,6 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
         
         if i % 10000 == 0:
             print(f'processed {i} packets')
-
-        # # Plot the graph every 2 seconds 
-        # if plot and 2 <= time() - prev_time :
-        #     if algo == 'network':
-        #         # create_plot(streams.values())
-        #         plot_ann_indexes(np.array(ann.vectors))
-        #     elif algo in ['ann', 'clustering']:
-        #         tri_graph.visualize_directed_graph()
-        #     prev_time = time()
             
         # Check only TCP packets
         if hasattr(packet, 'ip') and hasattr(packet, 'tcp'):
@@ -137,9 +128,12 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 streams.pop(stream_number)
             
         if algo == 'network':
+            if plot:
+                # create_plot(streams.values())
+                plot_ann_indexes(np.array(ann.vectors))
             continue
         
-        # Compute the embeddings and the ANN every 100 flows
+        # Compute the embeddings and the ANN every X flows
         if tri_graph.count_flows - prev_count_flows >= 2000:
             print("Checking anomalies...")
             embeddings = tri_graph.create_embeddings()
@@ -151,10 +145,10 @@ def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=Tr
                 check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
             if algo == 'combined':
                 check_anomalies(tri_graph.graph)
+            # tri_graph = TriGraph()
             if plot:
                 tri_graph.visualize_directed_graph()
                 plot_embeddings(embeddings, tri_graph.graph)
-                tri_graph = TriGraph()
             prev_count_flows = tri_graph.count_flows
     
     measure_results(tri_graph.graph)

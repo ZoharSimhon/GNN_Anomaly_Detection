@@ -7,6 +7,7 @@ from network import ANN
 from combined_algo import check_anomalies
 from results import measure_results
 from visualization import plot_embeddings
+from visualization import plot_embeddings
 
 def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False):
     if algo == 'network':
@@ -39,7 +40,7 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
             tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index)
             
             # Compute the embeddings and the ANN every 100 flows
-            if i and i % 500 == 0:
+            if i and i % 2000== 0:
                 print("Checking anomalies...")
                 embeddings = tri_graph.create_embeddings()
                 if algo == 'ann' or algo == 'combined':
@@ -55,9 +56,9 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
                     tri_graph.visualize_directed_graph()
                     plot_embeddings(embeddings, tri_graph.graph)
                 # tri_graph.graph.clear()
-        print(sum(pred))
+                
         measure_results(pred, label)
 
             
         
-run_algo("../data/Wednesday-dosWithoutStart.csv", plot=False)
+run_algo("../data/Tuesday-ftp.pcap_ISCX.csv", plot=False)
