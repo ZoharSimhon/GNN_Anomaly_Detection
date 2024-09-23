@@ -120,7 +120,7 @@ class TriGraph():
             node[f'{flag}_count'] += vector.flags[flag]
         
         
-    def add_nodes_edges_csv(self, row, pred, label, node_to_index):
+    def add_nodes_edges_csv(self, row, pred, label, node_to_index, separated_flags):
         # update count_flows
         self.count_flows += 1
         
@@ -144,7 +144,7 @@ class TriGraph():
             self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0,
+                                URG_count = 0, flags_count = 0,
                                 anomaly_score_history =  [], 
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
                                 ip = src, flows = 1, color = src_color)
@@ -156,7 +156,7 @@ class TriGraph():
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0,
+                                URG_count = 0, flags_count = 0,
                                 anomaly_score_history =  [], 
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
                                 ip = src, flows = 0, color = src_color)
@@ -168,7 +168,7 @@ class TriGraph():
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0,
+                                URG_count = 0, flags_count = 0,
                                 anomaly_score_history =  [],
                                 pred = False, label = dst_label, cluster_pred = False, ann_pred = False,
                                 ip = dst, sip = src, flows = 0, color = dst_color)
@@ -180,36 +180,39 @@ class TriGraph():
             self.graph.add_edge(src_id, dst_id)
         
         # update nodes features
-        self.update_features_csv(src_id, row, 'Fwd')
-        self.update_features_csv(src_ip, row, 'Fwd')
-        self.update_features_csv(dst_id, row, 'Bwd')
+        self.update_features_csv(src_id, row, 'Fwd', separated_flags)
+        self.update_features_csv(src_ip, row, 'Fwd', separated_flags)
+        self.update_features_csv(dst_id, row, 'Bwd', separated_flags)
         
-    def update_features_csv(self, id, row, direction):
+    def update_features_csv(self, id, row, direction, separated_flags):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
         
         node["flows"] += 1
         node['amount'] += int(row.get(f'Total {direction} Packets'))
         node['length'] += float(row.get(f'Total Length of {direction} Packets'))
-        node['min_packet_length'] += float(row.get(f'{direction} Packet Length Min'))
-        node['max_packet_length'] += float(row.get(f'{direction} Packet Length Max'))
-        node["packet_index"] = row["Timestamp"]
         
         if node['side'] == 'Client-IP':
             node["flows"] = self.graph.degree(id)
             
         if  node['amount'] != 0:     
             node['mean_packet_length'] = node['length']/node['amount']
-            
-        flags = {
-                'FIN': int(row['FIN Flag Count']),
-                'SYN': int(row['SYN Flag Count']),
-                'RST': int(row['RST Flag Count']),
-                'PSH': int(row['PSH Flag Count']),
-                'ACK': int(row['ACK Flag Count']),
-                'URG': int(row['URG Flag Count']),
-            }
         
-        for flag in flags:
-            node[f'{flag}_count'] += flags[flag]
+        if separated_flags:    
+            node['min_packet_length'] += float(row.get(f'{direction} Packet Length Min'))
+            node['max_packet_length'] += float(row.get(f'{direction} Packet Length Max'))
+            node["packet_index"] = row["Timestamp"]
+            flags = {
+                    'FIN': int(row['FIN Flag Count']),
+                    'SYN': int(row['SYN Flag Count']),
+                    'RST': int(row['RST Flag Count']),
+                    'PSH': int(row['PSH Flag Count']),
+                    'ACK': int(row['ACK Flag Count']),
+                    'URG': int(row['URG Flag Count']),
+                }
+            
+            for flag in flags:
+                node[f'{flag}_count'] += flags[flag]
+        else:
+            node['flags_count'] += row['TCP_FLAGS']
         
