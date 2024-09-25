@@ -214,5 +214,5 @@ class TriGraph():
             for flag in flags:
                 node[f'{flag}_count'] += flags[flag]
         else:
-            node['flags_count'] += row['TCP_FLAGS']
+            node['flags_count'] += int(row['TCP_FLAGS'])
         

@@ -15,7 +15,7 @@ hidden_size = 128
 output_size = 64
 
 attacker_ip = "18.221.219.4"
-victom_ip = "172.31.69.25;"
+victom_ip = "172.31.69.25"
 
 # attacker_ip = "172.16.0.1"
 # victom_ip = "192.168.10.50"
