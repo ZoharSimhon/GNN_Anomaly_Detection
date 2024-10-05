@@ -7,12 +7,14 @@ import hdbscan
 from sklearn.metrics import pairwise_distances_argmin_min
 
 from config import clustering_threshold
+from utils import measure_time
 
 # Function to perform clustering algorithm
+@measure_time
 def clustering_algorithm(embeddings): 
     
     # Initialize HDBSCAN
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean')
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean', prediction_data=True)
     
     # Perform clustering
     cluster_labels = clusterer.fit_predict(embeddings)
@@ -56,7 +58,7 @@ def calculate_density(vectors, labels):
         densities.append(current_density)
     return densities
 
-
+@measure_time
 def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], node_to_index={}):
     list_nodes = list(graph.nodes)
     
