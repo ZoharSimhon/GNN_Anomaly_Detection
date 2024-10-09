@@ -76,14 +76,15 @@ def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], nod
                 print(f"Cluster {cluster} is anomaly with the nodes:")
             for i, node in enumerate(clusters):
                 if node == cluster:
-                    if to_print:
-                        print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
-                        
                     curr_node = graph.nodes[list_nodes[i]]
                     curr_node["pred"] = True
                     curr_node["cluster_pred"] = True
                     curr_node["color"] = "lightgreen" if curr_node["label"] else "yellow"
+                    curr_node["cluster"] = cluster # CHECK
                     pred[node_to_index[list_nodes[i]]] = True
+                    
+                    if to_print:
+                        print(f"found ({description}) anomaly in node: {graph.nodes[list_nodes[i]]}")
             if to_print:
                 print()
         
