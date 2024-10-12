@@ -8,7 +8,7 @@ from combined_algo import check_anomalies
 from results import measure_results
 from visualization import plot_embeddings
 
-def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False):
+def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=5000, algo='clustering', plot=False):
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
@@ -19,7 +19,9 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
         pred = []
         label = []
         node_to_index = {}
-        
+
+        current_batch_new_nodes = 0
+
         # Iterate through each line in the CSV
         for i, row in enumerate(csv_reader):
             if i == num_of_rows:
@@ -29,19 +31,24 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
             row = {key.strip().replace('Backward', 'Bwd'): value for key, value in row.items()}
 
             if algo == 'network':
-                continue
+                break
             
             if row['Protocol'] != '6':
                 continue
             
             tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index)
-            # Compute the embeddings and the ANN every 100 flows
-            if i and i % 4000 == 0:
+    
+            # Compute the embeddings and clustering every x flows
+            if i and i % 50 == 0:
+                print(f'{current_batch_new_nodes} - {len(pred) - 1}')
+                # print(tri_graph.graph.nodes)
                 embeddings = tri_graph.create_embeddings()
+                current_batch_embeddings = embeddings[current_batch_new_nodes:len(pred)]
+                current_batch_new_nodes = len(pred)
                 if algo == 'ann' or algo == 'combined':
                     anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
                 if algo == 'clustering' or algo == 'combined':
-                    cluster_embeddings = embeddings.detach().numpy()
+                    cluster_embeddings = current_batch_embeddings.detach().numpy()
                     clusters = clustering_algorithm(cluster_embeddings)
                     check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, False, pred, node_to_index)
                 if algo == 'combined':
@@ -56,4 +63,4 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
 
             
         
-run_algo("../data/2017csv/goldeneye.csv", plot=False)
+run_algo("../data/2017csv/ftp.csv", plot=False)

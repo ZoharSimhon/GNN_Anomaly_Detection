@@ -14,10 +14,13 @@ from utils import measure_time
 def clustering_algorithm(embeddings): 
     
     # Initialize HDBSCAN
-    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean', prediction_data=True)
-    
+    if clusterer is None:
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=5, gen_min_span_tree=True, metric='euclidean', prediction_data=True).fit(embeddings)
+
     # Perform clustering
-    cluster_labels = clusterer.fit_predict(embeddings)
+    cluster_labels = hdbscan.approximate_predict(clusterer, embeddings)
+
+    # cluster_labels = clusterer.fit_predict(embeddings)
     
     return cluster_labels
 
