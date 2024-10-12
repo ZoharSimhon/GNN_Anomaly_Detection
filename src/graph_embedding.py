@@ -3,7 +3,6 @@ import torch
 from torch_geometric.nn import GCNConv
 
 from config import features, hidden_size, output_size
-from utils import measure_time
 
 # Define a Graph Convolutional Network (GCN) model for generating embeddings
 class GCN(torch.nn.Module):
@@ -19,7 +18,6 @@ class GCN(torch.nn.Module):
         x = self.conv2(x, edge_index)
         return x
 
-@measure_time
 def create_embeddings(self):
         # Convert node features to PyTorch tensors
         node_features = torch.FloatTensor([list([self.graph.nodes[node][feature]/self.graph.nodes[node]['flows'] for feature in features]) 
