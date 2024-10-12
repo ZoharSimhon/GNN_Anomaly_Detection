@@ -120,12 +120,12 @@ class TriGraph():
             node[f'{flag}_count'] += vector.flags[flag]
         
         
-    def add_nodes_edges_csv(self, row, pred, label, node_to_index):
+    def add_nodes_edges_csv(self, row, pred, label, node_to_index, feature_to_name):
         # update count_flows
         self.count_flows += 1
         
         # define colors
-        src_ip, dst_ip = row['Source IP'], row['Destination IP']
+        src_ip, dst_ip = row[feature_to_name['Source IP']], row[feature_to_name['Destination IP']]
         src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
         
         # check label
@@ -133,7 +133,7 @@ class TriGraph():
         dst_label = dst_ip in [attacker_ip, victom_ip]
         
         # add nodes
-        src_port, dst_port = row['Source Port'], row['Destination Port']
+        src_port, dst_port = row[feature_to_name['Source Port']], row[feature_to_name['Destination Port']]
         src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
@@ -180,20 +180,20 @@ class TriGraph():
             self.graph.add_edge(src_id, dst_id)
         
         # update nodes features
-        self.update_features_csv(src_id, row, 'Fwd')
-        self.update_features_csv(src_ip, row, 'Fwd')
-        self.update_features_csv(dst_id, row, 'Bwd')
+        self.update_features_csv(src_id, row, 'Fwd', feature_to_name)
+        self.update_features_csv(src_ip, row, 'Fwd', feature_to_name)
+        self.update_features_csv(dst_id, row, 'Bwd', feature_to_name)
         
-    def update_features_csv(self, id, row, direction):
+    def update_features_csv(self, id, row, direction, feature_to_name):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
         
         node["flows"] += 1
-        node['amount'] += int(row.get(f'Total {direction} Packets'))
-        node['length'] += float(row.get(f'Total Length of {direction} Packets'))
-        node['min_packet_length'] += float(row.get(f'{direction} Packet Length Min'))
-        node['max_packet_length'] += float(row.get(f'{direction} Packet Length Max'))
-        node["packet_index"] = row["Timestamp"]
+        node['amount'] += int(row[feature_to_name.get(f'amount_{direction}')])
+        node['length'] += float(row[feature_to_name.get(f'length_{direction}')])
+        node['min_packet_length'] += float(row[feature_to_name.get(f'min_packet_length_{direction}')])
+        node['max_packet_length'] += float(row[feature_to_name.get(f'max_packet_length_{direction}')])
+        node["packet_index"] = row[feature_to_name["Timestamp"]]
         
         if node['side'] == 'Client-IP':
             node["flows"] = self.graph.degree(id)
@@ -202,12 +202,12 @@ class TriGraph():
             node['mean_packet_length'] = node['length']/node['amount']
             
         flags = {
-                'FIN': int(row['FIN Flag Count']),
-                'SYN': int(row['SYN Flag Count']),
-                'RST': int(row['RST Flag Count']),
-                'PSH': int(row['PSH Flag Count']),
-                'ACK': int(row['ACK Flag Count']),
-                'URG': int(row['URG Flag Count']),
+                'FIN': int(row[feature_to_name['FIN']]),
+                'SYN': int(row[feature_to_name['SYN']]),
+                'RST': int(row[feature_to_name['RST']]),
+                'PSH': int(row[feature_to_name['PSH']]),
+                'ACK': int(row[feature_to_name['ACK']]),
+                'URG': int(row[feature_to_name['URG']]),
             }
         
         for flag in flags:

@@ -8,7 +8,54 @@ from combined_algo import check_anomalies
 from results import measure_results
 from visualization import plot_embeddings
 
-def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False):
+feature_to_name_IoT = {
+    'Source IP': 'Src IP',
+    'Source Port': 'Src Port',
+    'Destination IP': 'Dst IP',
+    'Destination Port': 'Dst Port',
+    'amount_Fwd': 'Tot Fwd Pkts',
+    'amount_Bwd': 'Tot Bwd Pkts',
+    'length_Fwd': 'TotLen Fwd Pkts',
+    'length_Bwd': 'TotLen Bwd Pkts',
+    'min_packet_length_Fwd': 'Fwd Pkt Len Min',
+    'min_packet_length_Bwd': 'Bwd Pkt Len Min',
+    'max_packet_length_Fwd': 'Fwd Pkt Len Max',
+    'max_packet_length_Bwd': 'Bwd Pkt Len Max',
+    'Timestamp': 'Timestamp',
+    'FIN': 'FIN Flag Cnt', 
+    'SYN': 'SYN Flag Cnt',
+    'RST': 'RST Flag Cnt',
+    'PSH': 'PSH Flag Cnt',
+    'ACK': 'ACK Flag Cnt',
+    'URG': 'URG Flag Cnt',
+    'Protocol': 'Protocol',
+}
+
+feature_to_name_CIC_2017 = {
+    'Source IP': ' Source IP',
+    'Source Port': ' Source Port',
+    'Destination IP': ' Destination IP',
+    'Destination Port': ' Destination Port',
+    'amount_Fwd': ' Total Fwd Packets',
+    'amount_Bwd': ' Total Backward Packets',
+    'length_Fwd': ' Total Length of Bwd Packets',
+    'length_Bwd': ' Total Length of Bwd Packets',
+    'min_packet_length_Fwd': ' Fwd Packet Length Min',
+    'min_packet_length_Bwd': ' Bwd Packet Length Min',
+    'max_packet_length_Fwd': ' Fwd Packet Length Max',
+    'max_packet_length_Bwd': 'Bwd Packet Length Max',
+    'Timestamp': ' Timestamp',
+    'FIN': 'FIN Flag Count', 
+    'SYN': ' SYN Flag Count',
+    'RST': ' RST Flag Count',
+    'PSH': ' PSH Flag Count',
+    'ACK': ' ACK Flag Count',
+    'URG': ' URG Flag Count',
+    'Protocol': ' Protocol',
+}
+
+
+def run_algo(pcap_file_path, dic_feature_to_name, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False):
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
@@ -26,15 +73,15 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
                 break
             
             # Strip spaces from keys and replace 'Backward' with 'Bwd'
-            row = {key.strip().replace('Backward', 'Bwd'): value for key, value in row.items()}
+            # row = {key.strip().replace('Backward', 'Bwd'): value for key, value in row.items()}
 
             if algo == 'network':
                 continue
             
-            if row['Protocol'] != '6':
+            if row[dic_feature_to_name['Protocol']] != '6':
                 continue
             
-            tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index)
+            tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index, dic_feature_to_name)
             # Compute the embeddings and the ANN every 100 flows
             if i and i % 4000 == 0:
                 embeddings = tri_graph.create_embeddings()
@@ -56,4 +103,4 @@ def run_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clu
 
             
         
-run_algo("../data/2017csv/goldeneye.csv", plot=False)
+run_algo("../data/cic-ids-2017-seperated/Friday-BOT-Morning.pcap_ISCX.csv", feature_to_name_CIC_2017 ,plot=False)
