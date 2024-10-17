@@ -45,7 +45,7 @@ def find_packet_time(packet):
     # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def run_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True):
+def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True):
     
     if algo == 'network':
         ann = ANN()
