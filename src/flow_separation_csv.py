@@ -104,15 +104,14 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
                 if row['tcp.flags.reset'] == '1':
                     continue
                 
-                streams[stream_number] = Vector(int(row['frame.len']), src, dst, fwd, stream_number, flags)
+                streams[stream_number] = Vector(int(row['frame.len']), src, dst, fwd, stream_number, flags, find_packet_time(row))
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                # print(find_packet_time(row) - vector.packet_index)
-                # if find_packet_time(row) - vector.packet_index > 2:
-                #     vector.finished = True
-                #     vector.packet_index = find_packet_time(row)
-                #     flow_finished(vector)
+                if find_packet_time(row) - vector.packet_index > 2:
+                    vector.finished = True
+                    vector.packet_index = find_packet_time(row)
+                    flow_finished(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(int(row['frame.len']), row['tcp.time_delta'], src, flags)
 

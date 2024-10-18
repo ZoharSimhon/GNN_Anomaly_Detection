@@ -103,7 +103,7 @@ def run_algo(pcap_file_path, dic_feature_to_name, sliding_window_size=1000, num_
                     plot_embeddings(embeddings, tri_graph.graph)
                 # tri_graph.graph.clear()
                 
-        measure_results(pred, label)
+        measure_results(tri_graph)
 
             
         

@@ -1,11 +1,11 @@
 # Define a class to represent a vector of network traffic data
 class Vector():
-    def __init__(self, length, src, dst, fwd, stream_number, flags) -> None:
+    def __init__(self, length, src, dst, fwd, stream_number, flags, packet_index = 0) -> None:
         # others
         self.src = src
         self.dst = dst
         self.stream_number = stream_number
-        self.packet_index = 0
+        self.packet_index = packet_index
         self.state = 'ESTABLISHED'
         self.finished = False
         

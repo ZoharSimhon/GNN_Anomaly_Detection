@@ -4,7 +4,7 @@ from networkx import NetworkXError
 
 from vector import Vector
 
-from config import attacker_ip, victom_ip
+from config import attacker_ip, victom_ip, dataset
 
 colors = ["lightskyblue"]
 # colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
@@ -47,6 +47,9 @@ class TriGraph():
         # check label
         src_label = src_ip in [attacker_ip, victom_ip]
         dst_label = dst_ip in [attacker_ip, victom_ip]
+        label = src_label and dst_label
+        if dataset == 'cic2018':
+            src_label, dst_label = label, label
         src_color = "lightcoral" if src_label else src_color
         dst_color = "lightcoral" if dst_label else dst_color
         
