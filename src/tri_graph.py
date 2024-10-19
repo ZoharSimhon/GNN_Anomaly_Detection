@@ -63,7 +63,7 @@ class TriGraph():
                                 URG_count = 0, count_opened_sockets = 0, 
                                 anomaly_score_history =  [], cluster = -2,
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
-                                ip = vector.src, flows = 1, color = src_color)
+                                ip = vector.src, flows = 1, color = src_color, timestamp=vector.timestamp)
                 
         if not self.graph.has_node(src_id):
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
@@ -72,7 +72,7 @@ class TriGraph():
                                 URG_count = 0, count_opened_sockets = 0, 
                                 anomaly_score_history =  [], cluster = -2,
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
-                                ip = vector.src, flows = 0, color = src_color)
+                                ip = vector.src, flows = 0, color = src_color, timestamp=vector.timestamp)
 
         if not self.graph.has_node(dst_id):
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
@@ -81,7 +81,7 @@ class TriGraph():
                                 URG_count = 0, count_opened_sockets = 0,
                                 anomaly_score_history =  [], cluster = -2,
                                 pred = False, label = dst_label, cluster_pred = False, ann_pred = False,
-                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color)
+                                ip = vector.dst, sip = vector.src, flows = 0, color = dst_color, timestamp=vector.timestamp)
         
         # add edges
         if not self.graph.has_edge(src_ip, src_id):

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 # Define a class to represent a vector of network traffic data
 class Vector():
     def __init__(self, length, src, dst, fwd, stream_number, flags, packet_index = 0) -> None:
@@ -8,6 +10,7 @@ class Vector():
         self.packet_index = packet_index
         self.state = 'ESTABLISHED'
         self.finished = False
+        self.timestamp = datetime.fromtimestamp(packet_index).strftime('%Y-%m-%d %H:%M:%S')
         
         # features
         self.flags = flags
