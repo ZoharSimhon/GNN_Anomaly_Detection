@@ -108,10 +108,9 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
             else: # New packet of existing flow
                 vector = streams[stream_number]
                 #  Divide large flow into small portions
-                if find_packet_time(row) - vector.packet_index > 2:
-                    vector.finished = True
-                    vector.packet_index = find_packet_time(row)
-                    flow_finished(vector)
+                # if float(row['tcp.time_delta']) > 2:
+                #     vector.finished = True
+                #     flow_finished(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(int(row['frame.len']), row['tcp.time_delta'], src, flags)
 
@@ -147,5 +146,19 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
                     tri_graph.visualize_directed_graph()
                     plot_embeddings(embeddings, tri_graph.graph)
                 prev_count_flows = tri_graph.count_flows
-    
+
+    print("Checking anomalies...")
+    embeddings = tri_graph.create_embeddings()
+    if algo == 'ann' or algo == 'combined':
+        anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
+    if algo == 'clustering' or algo == 'combined':
+        cluster_embeddings = embeddings.detach().numpy()
+        clusters = clustering_algorithm(cluster_embeddings)
+        check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
+    if algo == 'combined':
+        check_anomalies(tri_graph.graph)
+    # tri_graph = TriGraph()
+    if plot:
+        tri_graph.visualize_directed_graph()
+        plot_embeddings(embeddings, tri_graph.graph)
     measure_results(tri_graph.graph)
