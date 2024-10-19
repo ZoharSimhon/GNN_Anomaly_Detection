@@ -45,7 +45,7 @@ def find_packet_time(packet):
     # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True):
+def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
     
     if algo == 'network':
         ann = ANN()
@@ -134,7 +134,7 @@ def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', pl
             continue
         
         # Compute the embeddings and the ANN every X flows
-        if tri_graph.count_flows - prev_count_flows >= 2000:
+        if tri_graph.count_flows - prev_count_flows >= num_of_flows:
             print("Checking anomalies...")
             embeddings = tri_graph.create_embeddings()
             if algo == 'ann' or algo == 'combined':
