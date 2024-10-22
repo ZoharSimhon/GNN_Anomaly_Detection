@@ -140,6 +140,11 @@ class TriGraph():
         src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
+        if dataset == 'ton_iot':
+            src_label = dst_label = row['Label'] == '1'
+            src_ip = f'{src_ip}_{src_label}'
+            src, dst = f'{src}_{src_label}', f'{dst}_{dst_label}'
+            
         if not self.graph.has_node(src_ip):
             node_to_index[src_ip] = len(pred)
             pred.append(False)

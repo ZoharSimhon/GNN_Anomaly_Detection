@@ -92,7 +92,7 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
             
             tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index, dic_feature_to_name)
             # Compute the embeddings and the ANN every 100 flows
-            if (i and i % num_of_flows== 0) or (i == num_of_rows):
+            if (i and i % num_of_flows== 0) or (i >= num_of_rows):
                 print("Checking anomalies...")
                 embeddings = tri_graph.create_embeddings()
                 if algo == 'ann' or algo == 'combined':
@@ -109,7 +109,7 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
                     plot_embeddings(embeddings, tri_graph.graph)
                 # tri_graph.graph.clear()
                 
-            if i == num_of_rows:
+            if i >= num_of_rows:
                 break
                 
         print("Checking anomalies...")
@@ -133,4 +133,4 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
             
         
 # run_algo("../data/cic-ids-2017-seperated/Thursday-XSS.pcap_ISCX.csv", feature_to_name_CIC_2017 ,plot=False)
-run_algo(feature_to_name_CIC_2017 ,plot=False)
+run_algo(feature_to_name_IoT ,plot=False, num_of_rows=800000)
