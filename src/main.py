@@ -15,8 +15,11 @@ if __name__ == '__main__':
     else:
         num_of_flows = int(sys.argv[2])
 
+    victom_ip = sys.argv[3]
+    attacker_ip = sys.argv[4]
+
     if dataset == 'cic2018':
-        run_csv_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=1000, algo='clustering', plot=False, num_of_flows=num_of_flows)
+        run_csv_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False, num_of_flows=num_of_flows, victom_ip=victom_ip, attacker_ip=attacker_ip)
     else:
-        run_pcap_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=1000, algo='clustering', plot=False, num_of_flows=num_of_flows)
+        run_pcap_algo(pcap_file_path, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False, num_of_flows=num_of_flows)
 
