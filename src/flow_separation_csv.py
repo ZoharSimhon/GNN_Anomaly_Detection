@@ -43,18 +43,18 @@ def find_packet_time(row):
     # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
 
-def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
+def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000, victom_ip='ip', attacker_ip='ip'):
     
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
         tri_graph = TriGraph(sliding_window_size)
     
-    def flow_finished(vector):
+    def flow_finished(vector, victom_ip, attacker_ip):
         if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':
             print(f'anomaly on index {i}, stream: {stream_number}, vector: {vector}\n')
         elif algo in ['ann', 'clustering', 'combined']:
-            tri_graph.add_nodes_edges(vector)
+            tri_graph.add_nodes_edges(vector, victom_ip, attacker_ip)
     
     with open(pcap_file, mode='r') as file:
         csv_reader = csv.DictReader(file)
@@ -120,7 +120,7 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
             if vector.state == 'CLOSED':
                 # Add the whole flow - after he terminated to tri_graph
                 vector.packet_index = find_packet_time(row)
-                flow_finished(vector)
+                flow_finished(vector, victom_ip, attacker_ip)
                 streams.pop(stream_number)
             
             if algo == 'network':
