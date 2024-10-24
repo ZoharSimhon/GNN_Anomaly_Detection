@@ -4,7 +4,7 @@ from networkx import NetworkXError
 
 from vector import Vector
 
-from config import dataset
+from config import attacker_ip, victom_ip, dataset
 
 colors = ["lightskyblue"]
 # colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
@@ -36,7 +36,7 @@ class TriGraph():
             self.ip_to_color[ip] = colors[len(self.ip_to_color)%len(colors)]
         return self.ip_to_color[ip]
 
-    def add_nodes_edges(self, vector: Vector, victom_ip, attacker_ip):
+    def add_nodes_edges(self, vector: Vector):
         # update count_flows
         self.count_flows += 1
         
