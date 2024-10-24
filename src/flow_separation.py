@@ -1,14 +1,12 @@
 from pyshark import FileCapture
 import numpy as np
 
-from ann import ann_algorithm
 from vector import Vector
 from tri_graph import TriGraph
-from visualization import plot_embeddings, plot_ann_indexes
-from clustering import check_all_anomalies, clustering_algorithm
+from visualization import plot_ann_indexes
 from network import ANN
-from combined_algo import check_anomalies
 from results import measure_results
+from execute_pipeline import execute_pipeline
 
 def update_flow_state(flow, packet):
     fin_flag = packet.tcp.flags_fin == '1'
@@ -119,39 +117,15 @@ def separate_packets_pcap(pcap_file, num_of_rows=-1, algo='ann', plot=True, num_
             
         if algo == 'network':
             if plot:
-                # create_plot(streams.values())
                 plot_ann_indexes(np.array(ann.vectors))
             continue
         
         # Compute the embeddings and the ANN every X flows
         if tri_graph.count_flows - prev_count_flows >= num_of_flows:
-            print("Checking anomalies...")
-            embeddings = tri_graph.create_embeddings()
-            if algo == 'ann' or algo == 'combined':
-                anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
-            if algo == 'clustering' or algo == 'combined':
-                cluster_embeddings = embeddings.detach().numpy()
-                clusters = clustering_algorithm(cluster_embeddings)
-                check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
-            if algo == 'combined':
-                check_anomalies(tri_graph.graph)
-            if plot:
-                tri_graph.visualize_directed_graph()
-                plot_embeddings(embeddings, tri_graph.graph)
+            execute_pipeline(tri_graph, algo, plot)
             prev_count_flows = tri_graph.count_flows
         
-    print("Checking anomalies...")
-    embeddings = tri_graph.create_embeddings()
-    if algo == 'ann' or algo == 'combined':
-        anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
-    if algo == 'clustering' or algo == 'combined':
-        cluster_embeddings = embeddings.detach().numpy()
-        clusters = clustering_algorithm(cluster_embeddings)
-        check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
-    if algo == 'combined':
-        check_anomalies(tri_graph.graph)
-    if plot:
-        tri_graph.visualize_directed_graph()
-        plot_embeddings(embeddings, tri_graph.graph)
+
+    execute_pipeline(tri_graph, algo, plot)
     
     measure_results(tri_graph.graph)

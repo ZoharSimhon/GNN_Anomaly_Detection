@@ -57,7 +57,7 @@ def calculate_density(vectors, labels):
     return densities
 
 
-def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], node_to_index={}):
+def check_all_anomalies(graph, embeddings, clusters, pred, node_to_index, to_print=True):
     list_nodes = list(graph.nodes)
     
     def check_and_print_anomalies(elements, description = None):
@@ -70,7 +70,7 @@ def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], nod
                             if (elements[i] > avg_elements + clustering_threshold * std_elements) 
                             or  (elements[i] < avg_elements - clustering_threshold * std_elements)]
         
-        # print anomalies
+        # print anomalies & update predicted label
         for cluster in unusual_elements:
             if to_print:
                 print(f"Cluster {cluster} is anomaly with the nodes:")

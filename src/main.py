@@ -1,8 +1,10 @@
 import sys
+
 from flow_separation import separate_packets_pcap
 from flow_separation_csv import separate_packets_csv
-from csv_reading import process_flows, feature_to_name_CIC_2017
+from csv_reading import process_flows
 from config import dataset_type
+from config import feature_to_name
 
 if __name__ == '__main__':
 
@@ -23,4 +25,4 @@ if __name__ == '__main__':
     elif dataset_type == 'packets_pcap':
         separate_packets_pcap(input_file_path, num_of_rows=-1, algo='clustering', plot=False, num_of_flows=num_of_flows)
     else:
-        process_flows(feature_to_name_CIC_2017, input_file_path, num_of_flows, num_of_rows=-1, algo='clustering', plot=False)
+        process_flows(feature_to_name, input_file_path, num_of_flows, num_of_rows=-1, algo='clustering', plot=False)
