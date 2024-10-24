@@ -1,23 +1,16 @@
-from queue import Queue
 import networkx as nx
-from networkx import NetworkXError
 
 from vector import Vector
-
-from config import attacker_ip, victom_ip, dataset
+from config import attacker_ip, victom_ip, dataset_type
 
 colors = ["lightskyblue"]
-# colors = ["lightskyblue", "lightcoral","lightgreen", "limegreen", "crimson", "darkgray",
-#           "deeppink", "olivedrab", "blueviolet", "firebrick", "orange", "tomato", "maroon", "orchid", 
-#           "peru","yellow"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
-    def __init__(self, sliding_window_size = 1000) -> None:
+    def __init__(self) -> None:
         self.ip_to_id = {}
         self.graph = nx.Graph()
         self.count_flows = 1
-        self.q = Queue(maxsize=sliding_window_size)
         self.ip_to_color = {}
         self.gcn_model = None
     
@@ -36,7 +29,7 @@ class TriGraph():
             self.ip_to_color[ip] = colors[len(self.ip_to_color)%len(colors)]
         return self.ip_to_color[ip]
 
-    def add_nodes_edges(self, vector: Vector):
+    def add_separated_flow_to_graph(self, vector: Vector):
         # update count_flows
         self.count_flows += 1
         
@@ -48,7 +41,7 @@ class TriGraph():
         src_label = src_ip in [attacker_ip, victom_ip]
         dst_label = dst_ip in [attacker_ip, victom_ip]
         label = src_label and dst_label
-        if dataset == 'cic2018':
+        if dataset_type == 'cic2018':
             src_label, dst_label = label, label
         src_color = "lightcoral" if src_label else src_color
         dst_color = "lightcoral" if dst_label else dst_color
@@ -90,11 +83,11 @@ class TriGraph():
             self.graph.add_edge(src_id, dst_id)
         
         # update nodes features
-        self.update_features(src_id, vector, 'fwd')
-        self.update_features(src_ip, vector, 'fwd')
-        self.update_features(dst_id, vector, 'bwd')
+        self.update_features_of_separated_flow(src_id, vector, 'fwd')
+        self.update_features_of_separated_flow(src_ip, vector, 'fwd')
+        self.update_features_of_separated_flow(dst_id, vector, 'bwd')
         
-    def update_features(self, id, vector, direction):
+    def update_features_of_separated_flow(self, id, vector, direction):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
         
@@ -123,7 +116,7 @@ class TriGraph():
             node[f'{flag}_count'] += vector.flags[flag]
         
         
-    def add_nodes_edges_csv(self, row, pred, label, node_to_index, feature_to_name):
+    def add_flow_to_graph(self, row, pred, label, node_to_index, feature_to_name):
         # update count_flows
         self.count_flows += 1
         
@@ -140,7 +133,7 @@ class TriGraph():
         src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
-        if dataset == 'ton_iot':
+        if dataset_type == 'ton_iot':
             src_label = dst_label = row['Label'] == '1'
             src_ip = f'{src_ip}_{src_label}'
             src, dst = f'{src}_{src_label}', f'{dst}_{dst_label}'
@@ -188,11 +181,11 @@ class TriGraph():
             self.graph.add_edge(src_id, dst_id)
         
         # update nodes features
-        self.update_features_csv(src_id, row, 'Fwd', feature_to_name)
-        self.update_features_csv(src_ip, row, 'Fwd', feature_to_name)
-        self.update_features_csv(dst_id, row, 'Bwd', feature_to_name)
+        self.update_features(src_id, row, 'Fwd', feature_to_name)
+        self.update_features(src_ip, row, 'Fwd', feature_to_name)
+        self.update_features(dst_id, row, 'Bwd', feature_to_name)
         
-    def update_features_csv(self, id, row, direction, feature_to_name):
+    def update_features(self, id, row, direction, feature_to_name):
         # Update features of a node in the graph
         node = self.graph.nodes[id]
         

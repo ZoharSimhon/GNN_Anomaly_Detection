@@ -1,6 +1,4 @@
 from pyshark import FileCapture
-from time import time
-from datetime import datetime
 import numpy as np
 
 from ann import ann_algorithm
@@ -42,24 +40,21 @@ def update_flow_state(flow, packet):
 def find_packet_time(packet):
     ts = int(float(packet.frame_info.time_epoch))
     return ts
-    # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-
-def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
+def separate_packets_pcap(pcap_file, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
     
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
-        tri_graph = TriGraph(sliding_window_size)
+        tri_graph = TriGraph()
     
     def flow_finished(vector):
         if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':
             print(f'anomaly on index {i}, stream: {stream_number}, vector: {vector}\n')
         elif algo in ['ann', 'clustering', 'combined']:
-            tri_graph.add_nodes_edges(vector)
+            tri_graph.add_separated_flow_to_graph(vector)
     
     cap = FileCapture(pcap_file)
-    prev_time = time()
     prev_count_flows = 0
 
     streams = {}
@@ -110,11 +105,6 @@ def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', pl
                 streams[stream_number] = Vector(len(packet), src, dst, fwd, stream_number, flags)
             else: # New packet of existing flow
                 vector = streams[stream_number]
-                #  Divide large flow into small portions
-                if find_packet_time(packet) - vector.packet_index > 2:
-                    vector.finished = True
-                    vector.packet_index = find_packet_time(packet)
-                    flow_finished(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(len(packet), packet.tcp.time_delta, src, flags)
 
@@ -145,10 +135,23 @@ def run_pcap_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', pl
                 check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
             if algo == 'combined':
                 check_anomalies(tri_graph.graph)
-            # tri_graph = TriGraph()
             if plot:
                 tri_graph.visualize_directed_graph()
                 plot_embeddings(embeddings, tri_graph.graph)
             prev_count_flows = tri_graph.count_flows
+        
+    print("Checking anomalies...")
+    embeddings = tri_graph.create_embeddings()
+    if algo == 'ann' or algo == 'combined':
+        anomalies = ann_algorithm(tri_graph.graph, embeddings.detach().numpy(), algo != 'combined')
+    if algo == 'clustering' or algo == 'combined':
+        cluster_embeddings = embeddings.detach().numpy()
+        clusters = clustering_algorithm(cluster_embeddings)
+        check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
+    if algo == 'combined':
+        check_anomalies(tri_graph.graph)
+    if plot:
+        tri_graph.visualize_directed_graph()
+        plot_embeddings(embeddings, tri_graph.graph)
     
     measure_results(tri_graph.graph)

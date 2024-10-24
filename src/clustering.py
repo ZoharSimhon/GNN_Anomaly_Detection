@@ -6,7 +6,7 @@ import hdbscan
 # For anomalies
 from sklearn.metrics import pairwise_distances_argmin_min
 
-from config import clustering_threshold, dataset
+from config import clustering_threshold, dataset_type
 
 # Function to perform clustering algorithm
 def clustering_algorithm(embeddings): 
@@ -81,7 +81,7 @@ def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], nod
                     curr_node["cluster_pred"] = True
                     curr_node["color"] = "lightgreen" if curr_node["label"] else "yellow"
                     curr_node["cluster"] = cluster # CHECK
-                    if dataset != 'cic2018':
+                    if dataset_type != 'packets_csv':
                         pred[node_to_index[list_nodes[i]]] = True
                     
                     if to_print:
@@ -102,5 +102,4 @@ def check_all_anomalies(graph, embeddings, clusters, to_print=True, pred=[], nod
     centroid_distances = calculate_centroid_distances(centroids)
     check_and_print_anomalies(centroid_distances, "distances")
     if to_print:
-        print()
         print()

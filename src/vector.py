@@ -24,12 +24,12 @@ class Vector():
         self.max_fwd_packet = 0
         self.time_delta = 0.0
         
-
     # Aggregate the features on existing stream
     def add_packet(self, length, time_delta, src, flags):
         if self.finished:
             self.reset()
 
+        # Update features by direction
         if src == self.src:
             self.fwd_packets_amount += 1
             self.fwd_packets_length += length
@@ -44,10 +44,12 @@ class Vector():
                 self.min_bwd_packet = length
             if length > self.max_bwd_packet:
                 self.max_bwd_packet = length
-                
+            
+        # Append time delta
         new_time_delta = self.time_delta + float(time_delta)
         self.time_delta = round(new_time_delta, 3)
         
+        # Increase each flag
         for flag, value in flags.items():
             self.flags[flag] += int(value)
 
@@ -59,6 +61,7 @@ class Vector():
             result += f'{attr_name}: {attr_value}, '
         return result
 
+    # Reset a flow that has been terminated
     def reset(self):
         self.fwd_packets_length = 0
         self.bwd_packets_length = 0

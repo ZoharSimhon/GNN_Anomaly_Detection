@@ -40,21 +40,19 @@ def update_flow_state(flow, row):
 def find_packet_time(row):
     ts = int(float(row['frame.time_epoch']))
     return ts
-    # return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
 
-
-def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
+def separate_packets_csv(pcap_file, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
     
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
-        tri_graph = TriGraph(sliding_window_size)
+        tri_graph = TriGraph()
     
     def flow_finished(vector):
         if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':
             print(f'anomaly on index {i}, stream: {stream_number}, vector: {vector}\n')
         elif algo in ['ann', 'clustering', 'combined']:
-            tri_graph.add_nodes_edges(vector)
+            tri_graph.add_separated_flow_to_graph(vector)
     
     with open(pcap_file, mode='r') as file:
         csv_reader = csv.DictReader(file)
@@ -107,10 +105,6 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
                 streams[stream_number] = Vector(int(row['frame.len']), src, dst, fwd, stream_number, flags, find_packet_time(row))
             else: # New packet of existing flow
                 vector = streams[stream_number]
-                #  Divide large flow into small portions
-                # if float(row['tcp.time_delta']) > 2:
-                #     vector.finished = True
-                #     flow_finished(vector)
                 # Aggregate the packet's feature to the existing flow
                 vector.add_packet(int(row['frame.len']), row['tcp.time_delta'], src, flags)
 
@@ -141,7 +135,6 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
                     check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
                 if algo == 'combined':
                     check_anomalies(tri_graph.graph)
-                # tri_graph = TriGraph()
                 if plot:
                     tri_graph.visualize_directed_graph()
                     plot_embeddings(embeddings, tri_graph.graph)
@@ -157,8 +150,8 @@ def run_csv_algo(pcap_file, sliding_window_size, num_of_rows=-1, algo='ann', plo
         check_all_anomalies(tri_graph.graph, cluster_embeddings, clusters, algo != 'combined')
     if algo == 'combined':
         check_anomalies(tri_graph.graph)
-    # tri_graph = TriGraph()
     if plot:
         tri_graph.visualize_directed_graph()
         plot_embeddings(embeddings, tri_graph.graph)
+
     measure_results(tri_graph.graph)

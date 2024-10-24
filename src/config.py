@@ -18,4 +18,4 @@ victom_ip = "192.168.10.50"
 
 # 172.16.0.1|192.168.10.50
 
-dataset = 'cic2018'
+dataset_type = 'csv'

@@ -1,5 +1,4 @@
 import csv
-import sys
 
 from ann import ann_algorithm
 from tri_graph import TriGraph
@@ -57,23 +56,14 @@ feature_to_name_CIC_2017 = {
 }
 
 
-def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, sliding_window_size=1000, num_of_rows=-1, algo='clustering', plot=False):
-    # If no pcap_file_path is provided, check for command-line argument
-    if pcap_file_path is None:
-        pcap_file_path = sys.argv[1]
-    # If no num_of_flows is provided, check for command-line argument
-    if num_of_flows is None:
-        if len(sys.argv) < 3 or not sys.argv[2].isdecimal() or int(sys.argv[2]) <= 0:
-            num_of_flows = 2000
-        else:
-            num_of_flows = int(sys.argv[2])
+def process_flows(dic_feature_to_name, input_file_path=None, num_of_flows=None, num_of_rows=-1, algo='clustering', plot=False):
                 
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
-        tri_graph = TriGraph(sliding_window_size)
+        tri_graph = TriGraph()
         
-    with open(pcap_file_path, mode='r') as file:
+    with open(input_file_path, mode='r') as file:
         csv_reader = csv.DictReader(file)
         pred = []
         label = []
@@ -84,15 +74,18 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
             if i % 10000 == 0:
                 print(f'processed {i} flows')
             
+            if i == num_of_rows:
+                break
+
             if algo == 'network':
                 continue
             
             if row[dic_feature_to_name['Protocol']] != '6':
                 continue
             
-            tri_graph.add_nodes_edges_csv(row, pred, label, node_to_index, dic_feature_to_name)
-            # Compute the embeddings and the ANN every 100 flows
-            if (i and i % num_of_flows== 0) or (i >= num_of_rows):
+            tri_graph.add_flow_to_graph(row, pred, label, node_to_index, dic_feature_to_name)
+            # Compute the embeddings and the ANN every num_of_flows flows
+            if (i and i % num_of_flows == 0):
                 print("Checking anomalies...")
                 embeddings = tri_graph.create_embeddings()
                 if algo == 'ann' or algo == 'combined':
@@ -107,10 +100,6 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
                 if plot:
                     tri_graph.visualize_directed_graph()
                     plot_embeddings(embeddings, tri_graph.graph)
-                # tri_graph.graph.clear()
-                
-            if i >= num_of_rows:
-                break
                 
         print("Checking anomalies...")
         embeddings = tri_graph.create_embeddings()
@@ -126,11 +115,5 @@ def run_algo(dic_feature_to_name, pcap_file_path=None, num_of_flows=None, slidin
         if plot:
             tri_graph.visualize_directed_graph()
             plot_embeddings(embeddings, tri_graph.graph)
-        # tri_graph.graph.clear()
                 
         measure_results(tri_graph.graph)
-
-            
-        
-# run_algo("../data/cic-ids-2017-seperated/Thursday-XSS.pcap_ISCX.csv", feature_to_name_CIC_2017 ,plot=False)
-run_algo(feature_to_name_IoT ,plot=False, num_of_rows=800000)
