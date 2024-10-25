@@ -27,6 +27,15 @@ To install dependencies, run:
 pip install -r requirements.txt
 ```
 
+### Docker DevContainer Setup (Optional)
+
+You can also run this project using a Docker DevContainer, which sets up a consistent development environment with all dependencies pre-installed. To do so:
+1. Ensure you have Docker and VS Code (with the DevContainers extension) installed.
+2. Open the repository in VS Code and select “Reopen in Container” from the command palette.
+3. The DevContainer setup will automatically install all necessary dependencies and prepare the environment.
+
+This option is ideal for streamlined setup and isolated environment management.
+
 ## Data Preparation
 
 1. **Network Traffic Capture**:
