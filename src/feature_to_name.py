@@ -19,6 +19,9 @@ feature_to_name_IoT = {
     'ACK': 'ACK Flag Cnt',
     'URG': 'URG Flag Cnt',
     'Protocol': 'Protocol',
+    'TCP': '6',
+    'Label': 'Label',
+    'Attack Label': '1',
 }
 
 feature_to_name_CIC_2017 = {
@@ -42,4 +45,31 @@ feature_to_name_CIC_2017 = {
     'ACK': ' ACK Flag Count',
     'URG': ' URG Flag Count',
     'Protocol': ' Protocol',
+    'TCP': '6',
+}
+
+feature_to_name_elastic = {
+    'Source IP': 'Source_IP',
+    'Source Port': 'Source_port',
+    'Destination IP': 'Destination_IP',
+    'Destination Port': 'Destination_port',
+    'amount_Fwd': 'fwd_packets_amount',
+    'amount_Bwd': 'bwd_packets_amount',
+    'length_Fwd': 'fwd_packets_length',
+    'length_Bwd': 'bwd_packets_length',
+    'min_packet_length_Fwd': 'min_fwd_packet',
+    'min_packet_length_Bwd': 'min_bwd_packet',
+    'max_packet_length_Fwd': 'max_fwd_packet ',
+    'max_packet_length_Bwd': 'max_bwd_packet',
+    'Timestamp': 'Timestamp',
+    'FIN': 'FIN_count', 
+    'SYN': 'SYN_count',
+    'RST': 'RST_count',
+    'PSH': 'PSH_count',
+    'ACK': 'PSH_count',
+    'URG': 'URG_count',
+    'Protocol': 'Protocol',
+    'TCP': 'tcp',
+    'Label': 'label',
+    'Attack Label': 'malware',
 }

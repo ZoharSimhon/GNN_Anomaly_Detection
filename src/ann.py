@@ -32,7 +32,8 @@ def node_to_str(node) -> str:
 def print_anomalies(graph, anomaly_node_id, description):
     anomaly_node = graph.nodes[anomaly_node_id]
     anomaly_node_str = node_to_str(anomaly_node)
-    ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+    # ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
+    ts = datetime.fromtimestamp(int(anomaly_node["packet_index"])).strftime('%Y-%m-%d %H:%M:%S')
     print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
 
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm

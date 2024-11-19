@@ -1,9 +1,18 @@
-from feature_to_name import feature_to_name_CIC_2017, feature_to_name_IoT
+from feature_to_name import feature_to_name_CIC_2017, feature_to_name_IoT, feature_to_name_elastic
 
-features = ['amount', 'length', 'mean_packet_length', 
-            'FIN_count', 'SYN_count', 'RST_count', 'PSH_count', 'ACK_count', 'URG_count',
+features = [ 'amount', 
+            'length', 
+            'mean_packet_length', 
+            'FIN_count', 
+            'SYN_count', 
+            'RST_count', 
+            'PSH_count', 
+            'ACK_count', 
+            'URG_count',
             # 'count_opened_sockets', 
-            # 'min_packet_length', 'max_packet_length',
+            'min_packet_length', 
+            'max_packet_length',
+            'time_delta'
             ]
 
 anomaly_score_history_size  = 10

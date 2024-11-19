@@ -28,7 +28,7 @@ def process_flows(dic_feature_to_name, input_file_path=None, num_of_flows=None, 
             if i == num_of_rows:
                 break
             
-            if row[dic_feature_to_name['Protocol']] != '6':
+            if row[dic_feature_to_name['Protocol']] != dic_feature_to_name['TCP']:
                 continue
             
             tri_graph.add_flow_to_graph(row, pred, label, node_to_index, dic_feature_to_name)
