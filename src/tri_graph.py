@@ -213,4 +213,6 @@ class TriGraph():
         
         for flag in flags:
             node[f'{flag}_count'] += flags[flag]
+            
+        node['elastic_pred'] = int(node['label'])
         
