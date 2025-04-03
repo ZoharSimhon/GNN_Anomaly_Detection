@@ -3,8 +3,10 @@ import sys
 from flow_separation import separate_packets_pcap
 from flow_separation_csv import separate_packets_csv
 from csv_reading import process_flows
+from process_flows_elastic import process_flows_elastic
 from config import dataset_type
 from config import feature_to_name
+from config import index_name
 
 if __name__ == '__main__':
 
@@ -24,5 +26,7 @@ if __name__ == '__main__':
         separate_packets_csv(input_file_path, num_of_rows=-1, algo='clustering', plot=False, num_of_flows=num_of_flows)
     elif dataset_type == 'packets_pcap':
         separate_packets_pcap(input_file_path, num_of_rows=-1, algo='clustering', plot=False, num_of_flows=num_of_flows)
-    else:
-        process_flows(feature_to_name, input_file_path, num_of_flows, num_of_rows=-1, algo='clustering', plot=False)
+    elif dataset_type == 'elastic_csv':
+        process_flows_elastic(feature_to_name, input_file_path, num_of_flows, num_of_rows=-1, algo='combined', plot=False)
+    else: #labeled_data
+        process_flows(feature_to_name, input_file_path, num_of_flows, num_of_rows=-1, algo='combined', plot=False)
