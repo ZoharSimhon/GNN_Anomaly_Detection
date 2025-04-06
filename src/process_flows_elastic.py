@@ -1,55 +1,71 @@
 from elasticsearch import Elasticsearch
+import time
 from tri_graph import TriGraph
 from network import ANN
 from results import measure_results
 from execute_pipeline import execute_pipeline
 
-def process_flows_elastic(dic_feature_to_name, index_name, num_of_flows=None, num_of_rows=-1, algo='clustering', plot=False):
+def process_real_time_flows(dic_feature_to_name, index_name, num_of_flows=1000, poll_interval=5, algo='clustering', plot=False):
     if algo not in ['ann', 'clustering', 'combined']:
         print("No valid algorithm specified.")
         return
 
+    es = Elasticsearch("http://localhost:9200")  
     tri_graph = TriGraph()
-
-    # Connect to Elasticsearch
-    es = Elasticsearch("http://localhost:9200")  # Adjust if needed
-
-    # Start scrolling to fetch flows one by one
-    response = es.search(index=index_name, scroll="2m", size=1000, body={"query": {"match_all": {}}})
-    scroll_id = response["_scroll_id"]
-    total_processed = 0
-
     pred = []
     label = []
     node_to_index = {}
 
-    while total_processed != num_of_rows:  # Keep fetching until we reach the required number of rows
+    last_timestamp = 0  
+    eof_detected = False  # Flag to track termination signal
+
+    print("Listening for new flows in Elasticsearch...")
+    
+    while True:
+        # Check if termination signal exists
+        if es.exists(index=index_name, id="EOF"):
+            print("Termination signal detected. Processing remaining flows...")
+            eof_detected = True  
+
+        # Query new flows since the last timestamp
+        query = {
+            "query": {
+                "range": {
+                    "Timestamp": {"gt": last_timestamp}  
+                }
+            },
+            "sort": [{"Timestamp": "asc"}],  
+            "size": num_of_flows  
+        }
+
+        response = es.search(index=index_name, body=query)
         hits = response["hits"]["hits"]
+
         if not hits:
-            break  # Stop if no more data is available
+            if eof_detected:
+                print("No more flows left to process. Exiting...")
+                break  
+            else:
+                print("No new flows detected. Waiting...")
+                time.sleep(poll_interval)
+                continue  
 
-        for i, hit in enumerate(hits):
-            row = hit["_source"]  # Extract the actual flow data
+        print(f"Processing {len(hits)} new flows...")
 
-            if total_processed % 10000 == 0:
-                print(f'Processed {total_processed} flows')
-
-            if total_processed == num_of_rows:
-                break
+        for hit in hits:
+            row = hit["_source"]
 
             if row[dic_feature_to_name['Protocol']] != dic_feature_to_name['TCP']:
-                continue  # Only process TCP flows
+                continue  
 
             tri_graph.add_flow_to_graph(row, pred, label, node_to_index, dic_feature_to_name)
-            total_processed += 1
 
-            if total_processed and total_processed % num_of_flows == 0:
-                execute_pipeline(tri_graph, algo, plot, pred, node_to_index)
+        last_timestamp = hits[-1]["_source"]["Timestamp"]
 
-        # Fetch next batch of flows
-        response = es.scroll(scroll_id=scroll_id, scroll="2m")
-        scroll_id = response["_scroll_id"]
+        execute_pipeline(tri_graph, algo, plot, pred, node_to_index)
 
-    # Final execution
-    execute_pipeline(tri_graph, algo, plot, pred, node_to_index)
+        print("Waiting for new flows...")
+
+        time.sleep(poll_interval)
+
     measure_results(tri_graph.graph)

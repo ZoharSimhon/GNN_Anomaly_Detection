@@ -133,7 +133,7 @@ class TriGraph():
         src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
-        if dataset_type == 'labeled_data':
+        if dataset_type in ['labeled_data', 'elastic_flows']:
             src_label = dst_label = row[feature_to_name['Label']] == feature_to_name['Attack Label']
             src_ip = f'{src_ip}_{src_label}'
             src, dst = f'{src}_{src_label}', f'{dst}_{dst_label}'
@@ -146,9 +146,9 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0,
-                                anomaly_score_history =  [], cluster = -1,
+                                anomaly_score_history =  [], cluster = -1, printed = False,
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
-                                ip = src, flows = 1, color = src_color)
+                                ip = src_ip, port = None, flows = 1, color = src_color)
                 
         if not self.graph.has_node(src_id):
             node_to_index[src_id] = len(pred)
@@ -158,9 +158,9 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0,
-                                anomaly_score_history =  [], cluster = -1,
+                                anomaly_score_history =  [], cluster = -1, printed = False,
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
-                                ip = src, flows = 0, color = src_color)
+                                ip = src_ip, port = src_port, flows = 0, color = src_color)
 
         if not self.graph.has_node(dst_id):
             node_to_index[dst_id] = len(pred)
@@ -170,9 +170,9 @@ class TriGraph():
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
                                 URG_count = 0,
-                                anomaly_score_history =  [], cluster = -1,
+                                anomaly_score_history =  [], cluster = -1, printed = False,
                                 pred = False, label = dst_label, cluster_pred = False, ann_pred = False,
-                                ip = dst, sip = src, flows = 0, color = dst_color)
+                                ip = dst_ip, port = dst_port, sip = src, flows = 0, color = dst_color)
         
         # add edges
         if not self.graph.has_edge(src_ip, src_id):
