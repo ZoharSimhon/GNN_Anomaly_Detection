@@ -39,12 +39,12 @@ def find_packet_time(row):
     ts = int(float(row['frame.time_epoch']))
     return ts
 
-def separate_packets_csv(pcap_file, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
+def separate_packets_csv(pcap_file, victom_ip, attacker_ip, dataset_type, num_of_rows=-1, algo='ann', plot=True, num_of_flows=2000):
     
     if algo == 'network':
         ann = ANN()
     elif algo in ['ann', 'clustering', 'combined']:
-        tri_graph = TriGraph()
+        tri_graph = TriGraph(victom_ip, attacker_ip, dataset_type)
     
     def flow_finished(vector):
         if algo == 'network' and ann.add_vector(vector)[0] == 'anomaly':

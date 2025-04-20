@@ -1,4 +1,5 @@
 from feature_to_name import feature_to_name_CIC_2017, feature_to_name_IoT, feature_to_name_elastic
+# from main import attacker_ip, victom_ip
 
 features = [ 'amount', 
             'length', 
@@ -24,9 +25,9 @@ network_threshold = 14
 hidden_size = 128
 output_size = 64
 
-attacker_ip = "172.16.0.1"
-victom_ip = "192.168.10.50"
+attacker_ip = "attacker_ip"
+victom_ip = "victom_ip"
 
-dataset_type = 'csv'
+dataset_type = 'packets_csv'
 
 feature_to_name = feature_to_name_CIC_2017

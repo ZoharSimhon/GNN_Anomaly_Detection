@@ -1,18 +1,21 @@
 import networkx as nx
 
 from vector import Vector
-from config import attacker_ip, victom_ip, dataset_type
+# from config import attacker_ip, victom_ip, dataset_type
 
 colors = ["lightskyblue"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
-    def __init__(self) -> None:
+    def __init__(self, victom_ip, attacker_ip, dataset_type) -> None:
         self.ip_to_id = {}
         self.graph = nx.Graph()
         self.count_flows = 1
         self.ip_to_color = {}
         self.gcn_model = None
+        self.victom_ip = victom_ip
+        self.attacker_ip =attacker_ip
+        self.dataset_type=dataset_type
     
     from graph_embedding import create_embeddings
     from visualization import visualize_directed_graph
@@ -38,10 +41,10 @@ class TriGraph():
         src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
         
         # check label
-        src_label = src_ip in [attacker_ip, victom_ip]
-        dst_label = dst_ip in [attacker_ip, victom_ip]
+        src_label = src_ip in [self.attacker_ip, self.victom_ip]
+        dst_label = dst_ip in [self.attacker_ip, self.victom_ip]
         label = src_label and dst_label
-        if dataset_type == 'cic2018':
+        if self.dataset_type == 'cic2018':
             src_label, dst_label = label, label
         src_color = "lightcoral" if src_label else src_color
         dst_color = "lightcoral" if dst_label else dst_color
@@ -125,15 +128,15 @@ class TriGraph():
         src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
         
         # check label
-        src_label = src_ip in [attacker_ip, victom_ip]
-        dst_label = dst_ip in [attacker_ip, victom_ip]
+        src_label = src_ip in [self.attacker_ip, self.victom_ip]
+        dst_label = dst_ip in [self.attacker_ip, self.victom_ip]
         
         # add nodes
         src_port, dst_port = row[feature_to_name['Source Port']], row[feature_to_name['Destination Port']]
         src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
-        if dataset_type == 'labeled_data':
+        if self.dataset_type == 'labeled_data':
             src_label = dst_label = row[feature_to_name['Label']] == feature_to_name['Attack Label']
             src_ip = f'{src_ip}_{src_label}'
             src, dst = f'{src}_{src_label}', f'{dst}_{dst_label}'
