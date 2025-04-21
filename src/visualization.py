@@ -12,7 +12,7 @@ def visualize_directed_graph(self):
     # Get the nodes for each subset
     client_ip_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client-IP"]
     client_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
-    flow_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
+    # flow_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
     server_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Server"]
     
     # Initialize positions dictionary
@@ -26,9 +26,9 @@ def visualize_directed_graph(self):
     for i, node in enumerate(client_nodes):
         pos[node] = (-1, i * 2.0 / len(client_nodes))
 
-    # Set positions for Flow nodes
-    for i, node in enumerate(flow_nodes):
-        pos[node] = (0, i * 2.0 / len(flow_nodes))
+    # # Set positions for Flow nodes
+    # for i, node in enumerate(flow_nodes):
+    #     pos[node] = (0, i * 2.0 / len(flow_nodes))
 
     # Set positions for Server nodes
     for i, node in enumerate(server_nodes):
@@ -45,7 +45,10 @@ def visualize_directed_graph(self):
     # Draw edges
     nx.draw_networkx_edges(self.graph, pos, edge_color='gray', node_size=700)
     
-    plt.savefig(f'../output/imgs_dos_clusters/graph_imgs/graph{graph_index}.png')
+    # plt.savefig(f'../output/imgs_dos_clusters/graph_imgs/graph{graph_index}.png')
+    plt.ion()
+    plt.show()
+    plt.pause(0.1)
     graph_index += 1
 
 # Plot the graph embeddings

@@ -11,7 +11,7 @@ class TriGraph():
         self.ip_to_id = {}
         self.graph = nx.Graph()
         self.count_flows = 1
-        self.ip_to_color = {}
+        # self.ip_to_color = {}
         self.gcn_model = None
     
     from graph_embedding import create_embeddings
@@ -122,7 +122,8 @@ class TriGraph():
         
         # define colors
         src_ip, dst_ip = row[feature_to_name['Source IP']], row[feature_to_name['Destination IP']]
-        src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
+        # src_color, dst_color = self.get_color(src_ip), self.get_color(dst_ip)
+        src_color, dst_color = "lightskyblue", "lightskyblue"
         
         # check label
         src_label = src_ip in [attacker_ip, victom_ip]
@@ -212,7 +213,4 @@ class TriGraph():
             }
         
         for flag in flags:
-            node[f'{flag}_count'] += flags[flag]
-            
-        node['elastic_pred'] = int(node['label'])
-        
+            node[f'{flag}_count'] += flags[flag]             

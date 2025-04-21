@@ -37,7 +37,7 @@ def print_anomalies(graph, anomaly_node_id, description):
     print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
 
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
-def ann_algorithm(graph, embeddings, to_print=True):    
+def ann_algorithm(graph, embeddings, to_print=True, algo='ann', pred=[], node_to_index={}):    
     # Initialize an Annoy index for nearest neighbor search
     dimension = output_size  # Number of features in the vectors
     index = AnnoyIndex(dimension, 'euclidean')
@@ -73,7 +73,12 @@ def ann_algorithm(graph, embeddings, to_print=True):
             print_anomalies(graph, anomaly_node_id, "ann")
         graph.nodes[anomaly_node_id]["pred"] = True
         graph.nodes[anomaly_node_id]["ann_pred"] = True
-    
+        
+        if algo == 'combined':
+            graph.nodes[anomaly_node_id]["pred"] = graph.nodes[anomaly_node_id]["cluster_pred"] or graph.nodes[anomaly_node_id]["cluster"] == -1
+       
+        pred[node_to_index[anomaly_node_id]] = graph.nodes[anomaly_node_id]["pred"]
+            
     # add the anomaly score to the history queue + check anomalies nodes
     for i, anomaly_score in enumerate(anomaly_scores):
         node_id = list_nodes[i]
@@ -88,7 +93,11 @@ def ann_algorithm(graph, embeddings, to_print=True):
                     print_anomalies(graph, node_id, "history")
                 graph.nodes[node_id]["pred"] = True
                 graph.nodes[node_id]["ann_pred"] = True
-             
+                
+                if algo == 'combined':
+                    graph.nodes[node_id]["pred"] = graph.nodes[node_id]["cluster_pred"] or graph.nodes[node_id]["cluster"] == -1
+                
+                             
         if len(queue) >= anomaly_score_history_size:
             queue.pop(0)  # Remove the first element
         queue.append(anomaly_score)
