@@ -2,10 +2,10 @@ from sklearn.metrics import (
     accuracy_score, classification_report, confusion_matrix, roc_curve, roc_auc_score
 )
 
-def measure_results(graph):
+def measure_results(graph, pred = [], label = []):
     # Extracting the 'pred' and 'label' attributes
-    pred = [data['pred'] for _, data in graph.nodes(data=True)]
-    label = [data['label'] for _, data in graph.nodes(data=True)]
+    # pred = [data['pred'] for _, data in graph.nodes(data=True)]
+    # label = [data['label'] for _, data in graph.nodes(data=True)]
 
     # Calculate accuracy
     accuracy = accuracy_score(label, pred)

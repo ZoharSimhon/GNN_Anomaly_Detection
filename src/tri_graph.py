@@ -1,4 +1,5 @@
 import networkx as nx
+from collections import deque
 
 from vector import Vector
 from config import attacker_ip, victom_ip, dataset_type
@@ -7,12 +8,14 @@ colors = ["lightskyblue"]
 
 # Define a class to represent a tri-graph structure for network traffic analysis
 class TriGraph():
-    def __init__(self) -> None:
+    def __init__(self, sliding_windows_size=1000) -> None:
         self.ip_to_id = {}
         self.graph = nx.Graph()
         self.count_flows = 1
         # self.ip_to_color = {}
         self.gcn_model = None
+        self.sliding_windows_size = sliding_windows_size
+        self.client_queue = deque()
     
     from graph_embedding import create_embeddings
     from visualization import visualize_directed_graph
@@ -20,7 +23,7 @@ class TriGraph():
     # Generate id number for ip:port
     def get_id(self, key):
         if key not in self.ip_to_id:
-            self.ip_to_id[key] = f'{len(self.ip_to_id)}ip'
+            self.ip_to_id[key] = f'{len(self.ip_to_id)}'
         return self.ip_to_id[key]
 
     # Generate color number for ip
@@ -115,7 +118,6 @@ class TriGraph():
         for flag in vector.flags:
             node[f'{flag}_count'] += vector.flags[flag]
         
-        
     def add_flow_to_graph(self, row, pred, label, node_to_index, feature_to_name):
         # update count_flows
         self.count_flows += 1
@@ -131,30 +133,31 @@ class TriGraph():
         
         # add nodes
         src_port, dst_port = row[feature_to_name['Source Port']], row[feature_to_name['Destination Port']]
-        src, dst = f'{src_ip}:{src_port}', f'{dst_ip}:{dst_port}'
+        src, dst = f'{src_ip}:{src_port}_fwd', f'{dst_ip}:{dst_port}_bwd'
         src_id, dst_id = self.get_id(src), self.get_id(dst)
         
         if dataset_type in ['labeled_data', 'elastic_flows']:
             src_label = dst_label = row[feature_to_name['Label']] == feature_to_name['Attack Label']
             src_ip = f'{src_ip}_{src_label}'
             src, dst = f'{src}_{src_label}', f'{dst}_{dst_label}'
-            
-        if not self.graph.has_node(src_ip):
-            node_to_index[src_ip] = len(pred)
-            pred.append(False)
-            label.append(src_label)
-            self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
-                                min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
-                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
-                                URG_count = 0,
-                                anomaly_score_history =  [], cluster = -1, printed = False,
-                                pred = False, label = src_label, cluster_pred = False, ann_pred = False,
-                                ip = src_ip, port = None, flows = 1, color = src_color)
                 
         if not self.graph.has_node(src_id):
+            # Handle sliding window for Client nodes
+            if len(self.client_queue) >= self.sliding_windows_size:
+                oldest_client_id = self.client_queue.popleft()
+                if self.graph.has_node(oldest_client_id):
+                    self.graph.remove_node(oldest_client_id)
+                    
+                    # Remove any newly isolated nodes
+                    isolated_nodes = list(nx.isolates(self.graph))
+                    self.graph.remove_nodes_from(isolated_nodes)
+
+            # Add the new Client node to the node_to_index mapping
             node_to_index[src_id] = len(pred)
             pred.append(False)
             label.append(src_label)
+            
+            # Add the new Client node to the graph
             self.graph.add_node(src_id, side = 'Client', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
@@ -162,11 +165,15 @@ class TriGraph():
                                 anomaly_score_history =  [], cluster = -1, printed = False,
                                 pred = False, label = src_label, cluster_pred = False, ann_pred = False,
                                 ip = src_ip, port = src_port, flows = 0, color = src_color)
+            # Add to the queue
+            self.client_queue.append(src_id)
 
         if not self.graph.has_node(dst_id):
+            # Add the new Server node to the node_to_index mapping
             node_to_index[dst_id] = len(pred)
             pred.append(False)
             label.append(dst_label)
+                
             self.graph.add_node(dst_id, side = 'Server', amount = 0, length = 0, time_delta = 0.0, 
                                 min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
                                 FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
@@ -175,6 +182,19 @@ class TriGraph():
                                 pred = False, label = dst_label, cluster_pred = False, ann_pred = False,
                                 ip = dst_ip, port = dst_port, sip = src, flows = 0, color = dst_color)
         
+        if not self.graph.has_node(src_ip):
+            # Add the new Client-IP node to the node_to_index mapping
+            node_to_index[src_ip] = len(pred)
+            pred.append(False)
+            label.append(src_label)
+            
+            self.graph.add_node(src_ip, side = 'Client-IP', amount = 0, length = 0, time_delta = 0.0, 
+                                min_packet_length = 0, max_packet_length = 0, mean_packet_length = 0,
+                                FIN_count = 0,  SYN_count = 0,  RST_count = 0,  PSH_count = 0,  ACK_count = 0,  
+                                URG_count = 0,
+                                anomaly_score_history =  [], cluster = -1, printed = False,
+                                pred = False, label = src_label, cluster_pred = False, ann_pred = False,
+                                ip = src_ip, port = None, flows = 1, color = src_color)
         # add edges
         if not self.graph.has_edge(src_ip, src_id):
             self.graph.add_edge(src_ip, src_id)

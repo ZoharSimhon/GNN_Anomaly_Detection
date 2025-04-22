@@ -38,4 +38,4 @@ def process_flows(dic_feature_to_name, input_file_path=None, num_of_flows=None, 
                 
         execute_pipeline(tri_graph, algo, plot, pred, node_to_index)
                 
-        measure_results(tri_graph.graph)
+        measure_results(tri_graph.graph, pred, label)

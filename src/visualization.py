@@ -12,7 +12,6 @@ def visualize_directed_graph(self):
     # Get the nodes for each subset
     client_ip_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client-IP"]
     client_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Client"]
-    # flow_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Flow"]
     server_nodes = [node for node in self.graph.nodes if self.graph.nodes[node]["side"] == "Server"]
     
     # Initialize positions dictionary
@@ -20,15 +19,11 @@ def visualize_directed_graph(self):
     
     # Set positions for Client-IP nodes
     for i, node in enumerate(client_ip_nodes):
-        pos[node] = (-2, i * 2.0 / len(client_ip_nodes))
+        pos[node] = (-1, i * 2.0 / len(client_ip_nodes))
 
     # Set positions for Client nodes
     for i, node in enumerate(client_nodes):
-        pos[node] = (-1, i * 2.0 / len(client_nodes))
-
-    # # Set positions for Flow nodes
-    # for i, node in enumerate(flow_nodes):
-    #     pos[node] = (0, i * 2.0 / len(flow_nodes))
+        pos[node] = (0, i * 2.0 / len(client_nodes))
 
     # Set positions for Server nodes
     for i, node in enumerate(server_nodes):
