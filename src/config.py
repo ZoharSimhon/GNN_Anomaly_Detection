@@ -10,9 +10,9 @@ features = [ 'amount',
             'ACK_count', 
             'URG_count',
             # 'count_opened_sockets', 
-            'min_packet_length', 
-            'max_packet_length',
-            'time_delta'
+            # 'min_packet_length', 
+            # 'max_packet_length',
+            # 'time_delta'
             ]
 
 anomaly_score_history_size  = 10

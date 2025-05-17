@@ -22,8 +22,8 @@ def process_flows(dic_feature_to_name, input_file_path=None, num_of_flows=None, 
         
         # Iterate through each line in the CSV
         for i, row in enumerate(csv_reader):
-            # if i % 10000 == 0:
-            #     print(f'processed {i} flows')
+            if i % 10000 == 0:
+                print(f'processed {i} flows')
             
             if i == num_of_rows:
                 break

@@ -31,10 +31,11 @@ def node_to_str(node) -> str:
 
 def print_anomalies(graph, anomaly_node_id, description):
     anomaly_node = graph.nodes[anomaly_node_id]
-    anomaly_node_str = node_to_str(anomaly_node)
+    # anomaly_node_str = node_to_str(anomaly_node)
     # ts = datetime.fromtimestamp(anomaly_node["packet_index"]).strftime('%Y-%m-%d %H:%M:%S')
-    ts = datetime.fromtimestamp(int(anomaly_node["packet_index"])).strftime('%Y-%m-%d %H:%M:%S')
-    print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+    # ts = datetime.fromtimestamp(int(anomaly_node["packet_index"])).strftime('%Y-%m-%d %H:%M:%S')
+    # print(f'found ({description}) anomaly on packet number {ts} (node id: {anomaly_node_id}): {anomaly_node_str}')
+    print(f'found anomaly in node: {anomaly_node}')
 
 # Function to perform anomaly detection using an Approximate Nearest Neighbor (ANN) algorithm
 def ann_algorithm(graph, embeddings, to_print=True, algo='ann', pred=[], node_to_index={}):    
@@ -76,6 +77,8 @@ def ann_algorithm(graph, embeddings, to_print=True, algo='ann', pred=[], node_to
         
         if algo == 'combined':
             graph.nodes[anomaly_node_id]["pred"] = graph.nodes[anomaly_node_id]["cluster_pred"] or graph.nodes[anomaly_node_id]["cluster"] == -1
+            if graph.nodes[anomaly_node_id]["pred"]:
+                print_anomalies(graph, anomaly_node_id, "ann")
        
         pred[node_to_index[anomaly_node_id]] = graph.nodes[anomaly_node_id]["pred"]
             
@@ -96,6 +99,9 @@ def ann_algorithm(graph, embeddings, to_print=True, algo='ann', pred=[], node_to
                 
                 if algo == 'combined':
                     graph.nodes[node_id]["pred"] = graph.nodes[node_id]["cluster_pred"] or graph.nodes[node_id]["cluster"] == -1
+                    if graph.nodes[node_id]["pred"]:
+                        print_anomalies(graph, node_id, "ann")
+                    
                 
                              
         if len(queue) >= anomaly_score_history_size:
